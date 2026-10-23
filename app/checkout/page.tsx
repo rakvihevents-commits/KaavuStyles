@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { useStore } from "@/context/StoreContext";
 import { formatPrice } from "@/lib/utils";
 import { payWithRazorpay } from "@/lib/razorpay-checkout";
+import { productCardUrl } from "@/lib/productImages";
 import {
   ShieldCheck,
   MapPin,
@@ -568,7 +569,7 @@ export default function CheckoutPage() {
                     <div key={idx} className="pt-3 flex space-x-3 text-xs">
                       <div className="relative w-14 h-16 bg-ivory-200 border border-gold/30 flex-shrink-0 overflow-hidden">
                         <Image
-                          src={item.product.images[0] || "https://images.unsplash.com/photo-1610030469983-98e550d6193c?q=80&w=300"}
+                          src={productCardUrl(item.product.images[0] || "https://images.unsplash.com/photo-1610030469983-98e550d6193c?q=80&w=300")}
                           alt={item.product.name}
                           fill
                           className="object-cover"

@@ -32,6 +32,7 @@ export default function Navbar() {
 
   const [mobileProfileOpen, setMobileProfileOpen] = useState(false);
   const [headerHidden, setHeaderHidden] = useState(false);
+  const [couponClock, setCouponClock] = useState(0);
 
   useEffect(() => {
     let lastPosition = Math.max(0, window.scrollY);
@@ -61,8 +62,34 @@ export default function Navbar() {
     setIsMounted(true);
   }, []);
 
-  // Filter coupons marked for Top Navbar
-  const navbarCoupons = coupons.filter((c) => c.isActive && c.showInNavbar);
+  useEffect(() => {
+    const refreshCouponClock = () => setCouponClock(Date.now());
+    refreshCouponClock();
+    const interval = window.setInterval(refreshCouponClock, 10_000);
+    window.addEventListener("focus", refreshCouponClock);
+    return () => {
+      window.clearInterval(interval);
+      window.removeEventListener("focus", refreshCouponClock);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!mobileMenuOpen) return;
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setMobileMenuOpen(false);
+    };
+    window.addEventListener("keydown", handleEscape);
+    return () => window.removeEventListener("keydown", handleEscape);
+  }, [mobileMenuOpen]);
+
+  // Match the conditions used when a customer applies a coupon.
+  const navbarCoupons = coupons.filter((coupon) => {
+    if (!coupon.isActive || !coupon.showInNavbar || !couponClock) return false;
+    if (coupon.validFrom && !(Date.parse(coupon.validFrom) <= couponClock)) return false;
+    if (coupon.validUntil && !(Date.parse(coupon.validUntil) >= couponClock)) return false;
+    if (coupon.usageLimit && coupon.timesUsed >= coupon.usageLimit) return false;
+    return true;
+  });
 
   // Close dropdown on click outside
   useEffect(() => {
@@ -83,7 +110,7 @@ export default function Navbar() {
   return (
     <header onFocusCapture={() => setHeaderHidden(false)} className={`sticky top-0 z-50 shrink-0 bg-ivory shadow-luxury border-b border-gold/30 transition-transform duration-300 motion-reduce:transition-none lg:translate-y-0 ${headerHidden ? "-translate-y-full" : "translate-y-0"}`}>
       {/* 1. TOP ANNOUNCEMENT BAR (DYNAMIC SCROLLING MARQUEE) */}
-      {/* {isMounted && (
+      {isMounted && (
         <div className="bg-[#2B0B14] text-ivory py-1.5 overflow-hidden text-[11px] font-sans tracking-wide border-b border-gold/30">
           <div className="animate-marquee whitespace-nowrap flex items-center space-x-6 sm:space-x-8 font-medium" style={{ animationDuration: "50s" }}>
             {[1, 2, 3, 4, 5, 6].map((group) => (
@@ -133,27 +160,27 @@ export default function Navbar() {
             ))}
           </div>
         </div>
-      )}   */}
+      )}
 
       {/* 2. MAIN NAVIGATION ROW */}
       <div className="w-full px-4 sm:px-6 lg:px-12">
         <div className="flex items-center justify-between h-14 sm:h-16">
           {/* BRAND LOGO */}
-          <Link href="/" className="flex items-center space-x-2.5 sm:space-x-3 group">
+          <Link href="/" className="flex min-w-0 items-center space-x-2.5 sm:space-x-3 group">
             <div className="relative w-8 h-8 sm:w-9.5 sm:h-9.5 rounded-full overflow-hidden border-2 border-gold shadow-sm bg-ivory flex items-center justify-center group-hover:scale-105 transition-transform">
               <Image
-                src="/icon.jpeg"
+                src="/icon.webp"
                 alt="Kaavu Styles"
                 fill
                 className="object-cover"
                 priority
               />
             </div>
-            <div className="flex flex-col">
-              <span className="font-serif text-base sm:text-xl font-normal tracking-[0.16em] text-ink uppercase group-hover:text-burgundy transition-colors">
+            <div className="flex min-w-0 flex-col">
+              <span className="truncate font-serif text-sm sm:text-xl font-normal tracking-[0.12em] sm:tracking-[0.16em] text-ink uppercase group-hover:text-burgundy transition-colors">
                 Kaavu Styles
               </span>
-              <span className="text-[8px] sm:text-[9px] tracking-[0.2em] uppercase text-gold font-sans -mt-0.5 block">
+              <span className="block truncate text-[8px] sm:text-[9px] tracking-[0.2em] uppercase text-gold font-sans -mt-0.5">
                 For Every Version Of You
               </span>
             </div>
@@ -307,7 +334,7 @@ export default function Navbar() {
           </div>
 
           {/* MOBILE ACTIONS: DIRECT LOGIN BUTTON OR PROFILE ICON WITH NAME */}
-          <div className="flex items-center space-x-2.5 lg:hidden" ref={mobileDropdownRef}>
+          <div className="flex shrink-0 items-center space-x-1.5 sm:space-x-2.5 lg:hidden" ref={mobileDropdownRef}>
             <ProductSearch />
             {isMounted && currentUser ? (
               <div className="relative">
@@ -371,19 +398,32 @@ export default function Navbar() {
                 </div>}
               </div>
             )}
+            <button
+              type="button"
+              aria-label="Open navigation menu"
+              aria-expanded={mobileMenuOpen}
+              aria-controls="mobile-navigation-drawer"
+              onClick={() => {
+                setMobileProfileOpen(false);
+                setMobileMenuOpen((open) => !open);
+              }}
+              className="rounded-full border border-gold bg-burgundy p-2 text-gold shadow-sm hover:bg-burgundy-600"
+            >
+              <Menu className="h-4 w-4" aria-hidden="true" />
+            </button>
           </div>
         </div>
       </div>
 
       {/* MOBILE DRAWER */}
       {mobileMenuOpen && (
-        <div className="fixed inset-0 z-50 bg-ink/60 backdrop-blur-sm lg:hidden">
-          <div className="fixed inset-y-0 right-0 w-4/5 max-w-sm bg-ivory shadow-2xl p-6 flex flex-col justify-between border-l-2 border-gold animate-slideLeft">
+        <div className="fixed inset-0 z-50 bg-ink/60 backdrop-blur-sm lg:hidden" onClick={(event) => { if (event.target === event.currentTarget) setMobileMenuOpen(false); }}>
+          <div id="mobile-navigation-drawer" className="fixed inset-y-0 right-0 w-4/5 max-w-sm bg-ivory shadow-2xl p-6 flex flex-col justify-between border-l-2 border-gold animate-slideLeft">
             <div>
               <div className="flex items-center justify-between pb-6 border-b border-ivory-300">
                 <div className="flex items-center space-x-3">
                   <div className="w-8 h-8 rounded-full overflow-hidden relative border border-gold">
-                    <Image src="/icon.jpeg" alt="Logo" fill className="object-cover" />
+                    <Image src="/icon.webp" alt="Logo" fill className="object-cover" />
                   </div>
                   <span className="font-serif text-lg text-burgundy font-medium uppercase tracking-widest">
                     Kaavu Styles
@@ -391,6 +431,7 @@ export default function Navbar() {
                 </div>
                 <button
                   onClick={() => setMobileMenuOpen(false)}
+                  aria-label="Close navigation menu"
                   className="p-1 text-ink hover:text-burgundy"
                 >
                   <X className="w-6 h-6" />

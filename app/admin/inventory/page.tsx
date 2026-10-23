@@ -7,6 +7,7 @@ import AdminSidebar from "@/components/AdminSidebar";
 import AdminHeader from "@/components/AdminHeader";
 import { useStore } from "@/context/StoreContext";
 import VariantStockFields from "@/components/VariantStockFields";
+import { productCardUrl } from "@/lib/productImages";
 import { variantInventory } from "@/lib/inventory";
 import type { Product } from "@/lib/mockData";
 
@@ -27,7 +28,7 @@ function InventoryRow({ product }: { product: Product }) {
   }
   return <div className="bg-white rounded-xl border border-ivory-300 overflow-hidden shadow-sm">
     <button type="button" aria-expanded={expanded} aria-controls={`inventory-${product.id}`} onClick={() => setExpanded(!expanded)} className="w-full p-4 sm:p-5 flex items-center gap-3 sm:gap-4 text-left hover:bg-ivory-50 transition-colors">
-      <div className="relative w-12 h-16 shrink-0 rounded-lg overflow-hidden bg-ivory-200">{product.images[0] && <Image src={product.images[0]} alt="" fill sizes="48px" className="object-cover" />}</div>
+      <div className="relative w-12 h-16 shrink-0 rounded-lg overflow-hidden bg-ivory-200">{product.images[0] && <Image src={productCardUrl(product.images[0])} alt="" fill sizes="48px" className="object-cover" />}</div>
       <div className="flex-1 min-w-0"><div className="flex items-center gap-2"><h2 className="font-medium text-sm sm:text-base line-clamp-2">{product.name}</h2><ChevronDown className={`w-4 h-4 shrink-0 text-gold transition-transform ${expanded ? "rotate-180" : ""}`} /></div><p className="text-xs text-ink-muted mt-1 truncate">{product.category} · {product.sizes.length ? `${product.sizes.length} sizes` : "General stock"}</p></div>
       <span className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-medium ${product.stock === 0 ? "bg-rose-50 text-rose-700" : product.stock <= 5 ? "bg-amber-50 text-amber-800" : "bg-emerald-50 text-emerald-800"}`}>{product.stock} units</span>
     </button>

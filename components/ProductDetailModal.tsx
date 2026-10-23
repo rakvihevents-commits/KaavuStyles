@@ -7,6 +7,7 @@ import { Product } from "@/lib/mockData";
 import { useStore } from "@/context/StoreContext";
 import { stockForSize, stockForVariant, availableVariant } from "@/lib/inventory";
 import { formatPrice } from "@/lib/utils";
+import { productCardUrl } from "@/lib/productImages";
 import {
   X,
   Heart,
@@ -200,7 +201,7 @@ export default function ProductDetailModal({
                             : "border-ivory-300 opacity-70 hover:opacity-100"
                         }`}
                       >
-                        <Image src={img} alt={`Thumb ${idx + 1}`} fill className="object-cover" />
+                        <Image src={productCardUrl(img)} alt={`Thumb ${idx + 1}`} fill sizes="64px" className="object-cover" />
                       </button>
                     ))}
                   </div>
@@ -496,7 +497,7 @@ export default function ProductDetailModal({
                       : "border-ivory/30 opacity-60 hover:opacity-100"
                   }`}
                 >
-                  <Image src={img} alt={`Thumb ${idx + 1}`} fill className="object-cover" />
+                  <Image src={productCardUrl(img)} alt={`Thumb ${idx + 1}`} fill sizes="64px" className="object-cover" />
                 </button>
               ))}
             </div>

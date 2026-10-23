@@ -186,7 +186,7 @@ export default function AdminOrderInvoicePage() {
             <div className="flex items-center space-x-2">
               <div className="relative w-10 h-10 rounded-full border border-black overflow-hidden flex-shrink-0 bg-white">
                 <Image
-                  src="/icon.jpeg"
+                  src="/icon.webp"
                   alt="Kaavu Styles Logo"
                   fill
                   className="object-cover"
@@ -316,7 +316,7 @@ export default function AdminOrderInvoicePage() {
             <div className="flex items-center space-x-4">
               <div className="relative w-14 h-14 rounded-full overflow-hidden border-2 border-gold shadow-md bg-ivory flex-shrink-0 print:border-black">
                 <Image
-                  src="/icon.jpeg"
+                  src="/icon.webp"
                   alt="Kaavu Styles Logo"
                   fill
                   className="object-cover"

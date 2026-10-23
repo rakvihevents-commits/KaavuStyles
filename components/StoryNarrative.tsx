@@ -11,7 +11,7 @@ export default function StoryNarrative() {
           <div className="relative w-48 sm:w-56 lg:w-72 aspect-[3/4] rounded-t-[999px] border-2 border-gold p-2 bg-ivory shadow-luxury flex-shrink-0">
             <div className="relative w-full h-full rounded-t-[990px] overflow-hidden">
               <Image
-                src="/foundations.JPEG"
+                src="/foundations-home.webp"
                 alt="Kaavu Styless atelier and drapery"
                 fill
                 sizes="(min-width: 1024px) 288px, (min-width: 640px) 224px, 192px"

@@ -8,6 +8,7 @@ import { formatPrice } from "@/lib/utils";
 import { availableVariant } from "@/lib/inventory";
 import { Heart, ShoppingBag } from "lucide-react";
 import ProductDetailModal from "@/components/ProductDetailModal";
+import { productCardUrl } from "@/lib/productImages";
 
 export default function ProductCard({ product }: { product: Product }) {
   const { toggleWishlist, isInWishlist, addToCart } = useStore();
@@ -30,7 +31,7 @@ export default function ProductCard({ product }: { product: Product }) {
   </span>
 )}
           <Image
-            src={product.images[0] || "https://images.unsplash.com/photo-1610030469983-98e550d6193c?q=80&w=600"}
+            src={productCardUrl(product.images[0] || "https://images.unsplash.com/photo-1610030469983-98e550d6193c?q=80&w=600")}
             alt={product.name}
             fill
             sizes="(max-width: 639px) 50vw, (max-width: 1023px) 33vw, 320px"

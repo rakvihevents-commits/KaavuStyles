@@ -127,7 +127,7 @@ export default function HomePage() {
               <Sparkles className="w-3.5 h-3.5 text-gold flex-shrink-0" />
               <span>Style, your Way </span>
             </span>
-            <h2 className="font-serif text-2xl sm:text-4xl uppercase font-light text-ink text-center md:text-left">
+            <h2 className="font-serif text-2xl sm:text-2xl uppercase font-light text-ink text-center md:text-left">
               Which Version <span className="text-crimson font-normal italic">are you Today ?</span>
             </h2>
           </div>

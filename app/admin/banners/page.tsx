@@ -6,7 +6,6 @@ import AdminHeader from "@/components/AdminHeader";
 import ImageUploader from "@/components/ImageUploader";
 import { useStore } from "@/context/StoreContext";
 import { Banner } from "@/lib/mockData";
-import { compressAndOptimizeImage } from "@/lib/utils";
 import { uploadSingleImage } from "@/lib/storageUpload";
 import Image from "next/image";
 import { Plus, Trash2, X, AlignLeft, AlignCenter, AlignRight, Pencil } from "lucide-react";
@@ -470,18 +469,16 @@ export default function AdminBannersPage() {
                         </div>
                       </div>
                     </div>
-                    <ImageUploader images={mobileImages} onChange={setMobileImages} single={true} alwaysOptimize maxDimension={1000} quality={0.78} label="Mobile Banner — 800 × 1000 px (optional)" folder="banners" />
+                    <ImageUploader images={mobileImages} onChange={setMobileImages} single={true} imageSlot="mobileBanner" label="Mobile Banner — 800 × 1000 px (optional)" folder="banners" />
                     <p className="text-xs text-ink-muted">Mobile uses the landscape image when no mobile photo is uploaded.</p>
                     {/* Image Uploader (WebP Compression to Supabase Storage) */}
                     <ImageUploader
                       images={bannerImages}
                       onChange={setBannerImages}
                       single={true}
-                      alwaysOptimize
-                      maxDimension={1600}
-                      quality={0.78}
                       label="Landscape Banner — 1600 × 500 px"
                       folder="banners"
+                      imageSlot="landscapeBanner"
                     />
                   </div>
                 </div>

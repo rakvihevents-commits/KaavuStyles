@@ -4,6 +4,7 @@ import React, { useRef, useState, useEffect, useId } from "react";
 import Image from "next/image";
 import { Upload, X, Link as LinkIcon, Plus, Loader2 } from "lucide-react";
 import { compressAndOptimizeImage } from "@/lib/utils";
+import { IMAGE_SLOT_RULES, PRODUCT_IMAGE_RULES, WebpEncodingUnavailable, inspectImageUpload, prepareProductImage, prepareSlotImage, uploadOriginalForServerConversion, uploadProductImage, uploadSlotImage, type ImageSlot } from "@/lib/productImageUpload";
 
 import { uploadMultipleImages, uploadSingleImage, isBase64Image } from "@/lib/storageUpload";
 
@@ -17,6 +18,7 @@ interface ImageUploaderProps {
   quality?: number;
   alwaysOptimize?: boolean;
   folder?: string;
+  imageSlot?: ImageSlot;
 }
 
 export default function ImageUploader({
@@ -29,6 +31,7 @@ export default function ImageUploader({
   quality = 0.85,
   alwaysOptimize = false,
   folder = "products",
+  imageSlot,
 }: ImageUploaderProps) {
   const labelId = useId();
   const [uploadError, setUploadError] = useState("");
@@ -37,6 +40,7 @@ export default function ImageUploader({
   const [isUrlMode, setIsUrlMode] = useState(false);
   const [isCompressing, setIsCompressing] = useState(false);
   const [dimensions, setDimensions] = useState<Record<string, { width: number; height: number }>>({});
+  const isProductUpload = folder === "products";
 
   // Compute image dimensions whenever images array changes
   useEffect(() => {
@@ -63,9 +67,36 @@ export default function ImageUploader({
     const fileList = Array.from(files);
 
     try {
+      // Check size and dimensions together, then reject the whole selection before any upload.
+      const checks = await Promise.all(fileList.map(async (file) => ({
+        file,
+        issues: await inspectImageUpload(file, isProductUpload ? "product" : imageSlot ?? null),
+      })));
+      const failures = checks.filter(({ issues }) => issues.length > 0);
+      if (failures.length > 0) {
+        throw new Error(failures.map(({ file, issues }) => `Cannot upload "${file.name}":\n${issues.join("\n")}`).join("\n\n"));
+      }
       let preparedImages: string[] = [];
 
-      if (noOptimize) {
+      if (isProductUpload) {
+        preparedImages = await Promise.all(fileList.map(async (file) => {
+          try {
+            return await uploadProductImage(await prepareProductImage(file));
+          } catch (error) {
+            if (error instanceof WebpEncodingUnavailable) return uploadOriginalForServerConversion(file, "product");
+            throw error;
+          }
+        }));
+      } else if (imageSlot) {
+        preparedImages = await Promise.all(fileList.map(async (file) => {
+          try {
+            return await uploadSlotImage(await prepareSlotImage(file, imageSlot), imageSlot);
+          } catch (error) {
+            if (error instanceof WebpEncodingUnavailable) return uploadOriginalForServerConversion(file, imageSlot);
+            throw error;
+          }
+        }));
+      } else if (noOptimize) {
         const promises = fileList.map(
           (file) =>
             new Promise<string>((resolve, reject) => {
@@ -82,7 +113,7 @@ export default function ImageUploader({
       }
 
       // Upload directly to Supabase Storage bucket via server API route
-      const finalUrls = await uploadMultipleImages(preparedImages, folder);
+      const finalUrls = isProductUpload || imageSlot ? preparedImages : await uploadMultipleImages(preparedImages, folder);
 
       if (single) {
         onChange([finalUrls[0]]);
@@ -102,7 +133,7 @@ export default function ImageUploader({
 
   const handleAddUrl = async () => {
     const trimmed = urlInput.trim();
-    if (!trimmed || isCompressing) return;
+    if (!trimmed || isCompressing || isProductUpload || imageSlot) return;
     setUploadError("");
 
     try {
@@ -133,13 +164,28 @@ export default function ImageUploader({
     <div className="space-y-3 min-w-0" role="group" aria-labelledby={labelId} aria-busy={isCompressing}>
       <div className="flex flex-wrap justify-between items-center gap-2">
         <p id={labelId} className="text-xs font-semibold text-ink">{label}</p>
-        <button type="button" disabled={isCompressing} onClick={() => setIsUrlMode(!isUrlMode)} className="inline-flex items-center gap-1.5 text-xs text-crimson hover:underline disabled:opacity-50">
+        {!isProductUpload && !imageSlot && <button type="button" disabled={isCompressing} onClick={() => setIsUrlMode(!isUrlMode)} className="inline-flex items-center gap-1.5 text-xs text-crimson hover:underline disabled:opacity-50">
           {isUrlMode ? <Upload className="w-3.5 h-3.5" /> : <LinkIcon className="w-3.5 h-3.5" />}
           {isUrlMode ? "Upload from device" : "Paste image URL"}
-        </button>
+        </button>}
+      </div>
+      <div className="rounded-xl border-2 border-gold bg-ivory-50 p-3 sm:p-4 shadow-sm" aria-label="Image upload requirements">
+        <p className="text-xs font-bold uppercase tracking-wider text-crimson">Image upload requirements</p>
+        <div className="mt-2 flex flex-wrap gap-2 text-xs text-ink">
+          <span className="rounded-md border border-gold/50 bg-white px-3 py-2">Original file: <strong>1 MB max</strong></span>
+          {isProductUpload ? (
+            <span className="rounded-md border border-gold/50 bg-white px-3 py-2">Dimensions: <strong>{PRODUCT_IMAGE_RULES.detail.width} × {PRODUCT_IMAGE_RULES.detail.height} px minimum, 4:5 portrait</strong></span>
+          ) : imageSlot ? (
+            <span className="rounded-md border border-gold/50 bg-white px-3 py-2">Dimensions: <strong>{IMAGE_SLOT_RULES[imageSlot].width} × {IMAGE_SLOT_RULES[imageSlot].height} px minimum, same proportions</strong></span>
+          ) : (
+            <span className="rounded-md border border-gold/50 bg-white px-3 py-2">Dimensions: <strong>Flexible</strong></span>
+          )}
+        </div>
+        {isProductUpload && <p className="mt-2 text-xs leading-relaxed text-ink-muted">Saved as WebP: {PRODUCT_IMAGE_RULES.detail.width} × {PRODUCT_IMAGE_RULES.detail.height} px detail (max 400 KB) and {PRODUCT_IMAGE_RULES.card.width} × {PRODUCT_IMAGE_RULES.card.height} px card (max 100 KB). Images with the wrong shape or insufficient resolution are rejected.</p>}
+        {imageSlot && <p className="mt-2 text-xs leading-relaxed text-ink-muted">Saved as {IMAGE_SLOT_RULES[imageSlot].width} × {IMAGE_SLOT_RULES[imageSlot].height} px WebP, max {Math.round(IMAGE_SLOT_RULES[imageSlot].maxBytes / 1024)} KB. Images with the wrong shape or insufficient resolution are rejected.</p>}
       </div>
       <input ref={fileInputRef} type="file" accept="image/*" multiple={!single} onChange={handleFileSelect} disabled={isCompressing} className="hidden" aria-label={label} />
-      {isUrlMode && <div className="flex flex-col sm:flex-row gap-2">
+      {isUrlMode && !isProductUpload && !imageSlot && <div className="flex flex-col sm:flex-row gap-2">
         <input type="url" aria-label={`Image URL for ${label}`} placeholder="https://example.com/photo.jpg" value={urlInput} disabled={isCompressing} onChange={event => setUrlInput(event.target.value)} className="min-w-0 flex-1 rounded-lg border border-ivory-300 bg-white p-3 text-base sm:text-sm text-ink outline-none focus:border-gold" />
         <button type="button" disabled={isCompressing || !urlInput.trim()} onClick={handleAddUrl} className="rounded-lg px-4 py-3 bg-crimson text-ivory text-xs font-semibold disabled:opacity-50">{single && images.length ? "Replace photo" : "Add photo"}</button>
       </div>}
@@ -159,7 +205,7 @@ export default function ImageUploader({
         </div>
         {images.length > 0 && <p className="mt-3 text-[11px] text-ink-muted">{images.length} photo{images.length === 1 ? "" : "s"}{single ? " · Use Replace photo to choose another." : " · Use + to upload more photos."}</p>}
       </div>
-      {uploadError && <p role="alert" className="text-sm text-crimson">{uploadError}</p>}
+      {uploadError && <p role="alert" className="whitespace-pre-line rounded-lg border border-crimson/40 bg-crimson/5 p-3 text-sm font-medium text-crimson">{uploadError}</p>}
     </div>
   );
 }

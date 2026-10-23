@@ -7,6 +7,7 @@ import AdminListCard from "@/components/AdminListCard";
 import { useStore } from "@/context/StoreContext";
 import { formatPrice } from "@/lib/utils";
 import Image from "next/image";
+import { productCardUrl } from "@/lib/productImages";
 import { useRouter } from "next/navigation";
 import { Plus, Trash2, Edit, Search, ChevronDown } from "lucide-react";
 
@@ -157,7 +158,7 @@ export default function AdminProductsPage() {
               )}
             </div>
             <div className="lg:hidden space-y-3 p-3">
-{!isMounted ? <p className="p-6 text-center text-ink-muted">Loading products…</p> : filteredProducts.length === 0 ? <p className="p-6 text-center text-ink-muted">No products match your filters.</p> : filteredProducts.map(p => <AdminListCard key={p.id} title={p.name} subtitle={p.category} badge={`${p.stock} units`} image={<div className="relative w-12 h-16 shrink-0 rounded-lg overflow-hidden bg-ivory-200"><Image src={p.images[0]} alt="" fill sizes="48px" className="object-cover" /></div>}>
+                  {!isMounted ? <p className="p-6 text-center text-ink-muted">Loading products…</p> : filteredProducts.length === 0 ? <p className="p-6 text-center text-ink-muted">No products match your filters.</p> : filteredProducts.map(p => <AdminListCard key={p.id} title={p.name} subtitle={p.category} badge={`${p.stock} units`} image={<div className="relative w-12 h-16 shrink-0 rounded-lg overflow-hidden bg-ivory-200"><Image src={productCardUrl(p.images[0])} alt="" fill sizes="48px" className="object-cover" /></div>}>
 <div className="flex items-center justify-between"><span className="text-ink-muted">Price</span><span className="font-medium text-crimson">{formatPrice(p.price)}</span></div>
 <p className="text-[10px] text-ink-muted font-mono break-all">ID: {p.id}</p>
 <div><p className="text-xs text-ink-muted mb-2">Stock by size</p><div className="flex flex-wrap gap-2">{p.sizes.length ? p.sizes.map(size => <span key={size} className="bg-white border border-ivory-300 rounded-lg px-3 py-2 text-xs">{size}: {p.sizeStock ? p.sizeStock[size] ?? 0 : "Shared"}</span>) : <span className="text-xs">General stock: {p.stock}</span>}</div></div>
@@ -183,7 +184,7 @@ export default function AdminProductsPage() {
                       <td data-label="Image" className="py-4 px-3">
                         <div className="relative w-12 h-16 bg-ivory-200 border border-ivory-300 overflow-hidden">
                           <Image
-                            src={p.images[0] || "https://images.unsplash.com/photo-1610030469983-98e550d6193c?q=80&w=400"}
+                            src={productCardUrl(p.images[0] || "https://images.unsplash.com/photo-1610030469983-98e550d6193c?q=80&w=400")}
                             alt={p.name}
                             fill
                             className="object-cover"

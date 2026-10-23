@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   description:
     "Kaavu Styles luxury fashion apparel, kurtis, lehengas, and artisanal ensembles.",
   icons: {
-    icon: "/icon.jpeg",
+    icon: "/favicon.png",
   },
 };
 

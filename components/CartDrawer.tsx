@@ -7,6 +7,7 @@ import { useStore } from "@/context/StoreContext";
 import { formatPrice } from "@/lib/utils";
 import { X, Trash2, Plus, Minus, ShoppingBag, Lock, ShieldCheck, Ticket, Tag, CheckCircle } from "lucide-react";
 import CheckoutModal from "@/components/CheckoutModal";
+import { productCardUrl } from "@/lib/productImages";
 
 export default function CartDrawer() {
   const router = useRouter();
@@ -112,7 +113,7 @@ export default function CartDrawer() {
                 {/* Product Thumbnail */}
                 <div className="relative w-20 h-24 bg-ivory-200 flex-shrink-0 overflow-hidden border border-ivory-300">
                   <Image
-                    src={item.product.images[0] || "https://images.unsplash.com/photo-1610030469983-98e550d6193c?q=80&w=400"}
+                    src={productCardUrl(item.product.images[0] || "https://images.unsplash.com/photo-1610030469983-98e550d6193c?q=80&w=400")}
                     alt={item.product.name}
                     fill
                     className="object-cover"

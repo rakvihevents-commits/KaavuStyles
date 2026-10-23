@@ -43,7 +43,7 @@ export default function SiteEntrance({ children }: { children: React.ReactNode }
       {!finished && (
         <div className={`site-entrance ${leaving ? "site-entrance-leaving" : ""}`} role="status" aria-live="polite" aria-label="Loading Kaavu Styles">
           <div className="site-entrance-emblem">
-            <Image src="/icon.jpeg" alt="" width={88} height={88} priority className="rounded-full object-cover" />
+            <Image src="/icon.webp" alt="" width={88} height={88} priority className="rounded-full object-cover" />
           </div>
           <p className="font-serif text-3xl sm:text-4xl tracking-[0.16em] text-ivory uppercase mt-7">Kaavu Styles</p>
           <p className="text-gold text-[10px] sm:text-xs tracking-[0.28em] uppercase mt-3">For Every Version Of You</p>

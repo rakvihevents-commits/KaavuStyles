@@ -39,7 +39,7 @@ function formatCouponDate(dateStr?: string | null): string {
 }
 
 export default function AdminCouponsPage() {
-  const { coupons, addCoupon, updateCoupon, deleteCoupon } = useStore();
+  const { coupons, couponsError, addCoupon, updateCoupon, deleteCoupon, isLoading } = useStore();
   const [isMounted, setIsMounted] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCouponId, setEditingCouponId] = useState<string | null>(null);
@@ -63,6 +63,25 @@ export default function AdminCouponsPage() {
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
 
   const [codeError, setCodeError] = useState("");
+  const [actionError, setActionError] = useState("");
+  const [busyCouponId, setBusyCouponId] = useState<string | null>(null);
+  const [savingCoupon, setSavingCoupon] = useState(false);
+
+  const changeCoupon = async (id: string, fields: Partial<Coupon>) => {
+    setActionError("");
+    setBusyCouponId(id);
+    try { await updateCoupon(id, fields); }
+    catch (error) { setActionError(error instanceof Error ? error.message : "Could not update coupon."); }
+    finally { setBusyCouponId(null); }
+  };
+
+  const removeSavedCoupon = async (id: string) => {
+    setActionError("");
+    setBusyCouponId(id);
+    try { await deleteCoupon(id); }
+    catch (error) { setActionError(error instanceof Error ? error.message : "Could not delete coupon."); }
+    finally { setBusyCouponId(null); }
+  };
 
   const handleCopyCode = (codeToCopy: string) => {
     if (typeof window !== "undefined" && navigator.clipboard) {
@@ -75,6 +94,7 @@ export default function AdminCouponsPage() {
   };
 
   const handleOpenAdd = () => {
+    setActionError("");
     setEditingCouponId(null);
     setCode("");
     setDescription("");
@@ -92,6 +112,7 @@ export default function AdminCouponsPage() {
   };
 
   const handleOpenEdit = (c: Coupon) => {
+    setActionError("");
     setEditingCouponId(c.id);
     setCode(c.code);
     setDescription(c.description || "");
@@ -121,6 +142,7 @@ export default function AdminCouponsPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (savingCoupon) return;
     if (!code) {
       setCodeError("Coupon code is required.");
       return;
@@ -140,13 +162,17 @@ export default function AdminCouponsPage() {
       showInNavbar,
     };
 
-    if (editingCouponId) {
-      await updateCoupon(editingCouponId, payload);
-    } else {
-      await addCoupon(payload);
+    setActionError("");
+    setSavingCoupon(true);
+    try {
+      if (editingCouponId) await updateCoupon(editingCouponId, payload);
+      else await addCoupon(payload);
+      setIsModalOpen(false);
+    } catch (error) {
+      setActionError(error instanceof Error ? error.message : "Could not save coupon.");
+    } finally {
+      setSavingCoupon(false);
     }
-
-    setIsModalOpen(false);
   };
 
   return (
@@ -157,6 +183,8 @@ export default function AdminCouponsPage() {
         <AdminHeader title="Coupons & Discount Offers Management" />
 
         <main className="p-6 sm:p-8 space-y-6">
+          {actionError && <p role="alert" className="rounded border border-crimson/30 bg-crimson/5 p-3 text-sm text-crimson">{actionError}</p>}
+          {couponsError && <p role="alert" className="rounded border border-crimson/30 bg-crimson/5 p-3 text-sm text-crimson">{couponsError}</p>}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-ivory p-5 border border-ivory-300 shadow-sm">
             <div>
               <h2 className="font-serif text-xl text-ink uppercase flex items-center space-x-2">
@@ -169,6 +197,7 @@ export default function AdminCouponsPage() {
             </div>
             <button
               onClick={handleOpenAdd}
+              disabled={isLoading}
               className="px-6 py-3.5 bg-crimson hover:bg-crimson-800 text-ivory text-xs uppercase tracking-[0.2em] font-semibold flex items-center justify-center space-x-2 shadow-md transition-all cursor-pointer"
             >
               <Plus className="w-4 h-4" />
@@ -179,11 +208,11 @@ export default function AdminCouponsPage() {
           {/* Coupons Listing Table */}
           <div className="bg-ivory border border-ivory-300 overflow-hidden shadow-sm">
             <div className="lg:hidden space-y-3 p-3">
-{!isMounted ? <p className="p-6 text-center text-ink-muted">Loading coupons…</p> : coupons.length === 0 ? <p className="p-6 text-center text-ink-muted">No coupons yet.</p> : coupons.map(c => <AdminListCard key={c.id} title={c.code} subtitle={c.description || 'Discount offer'} badge={c.isActive ? 'Active' : 'Inactive'}>
+{!isMounted || isLoading ? <p className="p-6 text-center text-ink-muted">Loading coupons…</p> : coupons.length === 0 ? <p className="p-6 text-center text-ink-muted">No coupons yet.</p> : coupons.map(c => <AdminListCard key={c.id} title={c.code} subtitle={c.description || 'Discount offer'} badge={c.isActive ? 'Active' : 'Inactive'}>
 <p className="text-sm text-ink-muted">{c.description}</p><div className="grid grid-cols-2 gap-3"><div className="rounded-lg bg-white border border-ivory-300 p-3"><p className="text-xs text-ink-muted">Discount</p><p className="mt-1 font-medium text-crimson">{c.discountType === 'percentage' ? `${c.discountValue}%` : formatPrice(c.discountValue)}</p></div><div className="rounded-lg bg-white border border-ivory-300 p-3"><p className="text-xs text-ink-muted">Minimum order</p><p className="mt-1 font-medium">{formatPrice(c.minOrderValue)}</p></div></div>
 <p className="text-xs text-ink-muted">Used {c.timesUsed}{c.usageLimit ? ` / ${c.usageLimit}` : ' · Unlimited'} · Max discount: {c.maxDiscount ? formatPrice(c.maxDiscount) : 'No cap'}</p><p className="text-xs text-ink-muted">Valid until: {c.validUntil ? formatCouponDate(c.validUntil) : 'No expiry'}</p>
-<div className="flex justify-between items-center gap-3"><span className="text-xs">Show in header</span><button role="switch" aria-checked={c.showInNavbar || false} aria-label={`Show ${c.code} in header`} onClick={() => updateCoupon(c.id,{showInNavbar:!c.showInNavbar})} className={`rounded-full px-4 py-2 text-xs ${c.showInNavbar ? 'bg-crimson text-ivory' : 'bg-ivory-200 text-ink-muted'}`}>{c.showInNavbar ? 'On' : 'Off'}</button></div>
-<div className="flex gap-2"><button onClick={() => handleOpenEdit(c)} className="flex-1 rounded-lg bg-crimson text-ivory py-3 text-xs">Edit coupon</button><button onClick={() => updateCoupon(c.id,{isActive:!c.isActive})} className="border border-ivory-300 rounded-lg px-3 text-xs">{c.isActive ? 'Disable' : 'Enable'}</button><button onClick={() => deleteCoupon(c.id)} className="text-crimson px-2 text-xs">Delete</button></div>
+<div className="flex justify-between items-center gap-3"><span className="text-xs">Show in header</span><button disabled={busyCouponId === c.id} role="switch" aria-checked={c.showInNavbar || false} aria-label={`Show ${c.code} in header`} onClick={() => changeCoupon(c.id,{showInNavbar:!c.showInNavbar})} className={`rounded-full px-4 py-2 text-xs ${c.showInNavbar ? 'bg-crimson text-ivory' : 'bg-ivory-200 text-ink-muted'}`}>{c.showInNavbar ? 'On' : 'Off'}</button></div>
+<div className="flex gap-2"><button onClick={() => handleOpenEdit(c)} className="flex-1 rounded-lg bg-crimson text-ivory py-3 text-xs">Edit coupon</button><button disabled={busyCouponId === c.id} onClick={() => changeCoupon(c.id,{isActive:!c.isActive})} className="border border-ivory-300 rounded-lg px-3 text-xs">{c.isActive ? 'Disable' : 'Enable'}</button><button disabled={busyCouponId === c.id} onClick={() => removeSavedCoupon(c.id)} className="text-crimson px-2 text-xs">Delete</button></div>
 </AdminListCard>)}
 </div><div className="hidden lg:block overflow-x-auto">
               <table className="w-full min-w-[760px] lg:min-w-0 table-fixed text-left text-xs border-collapse">
@@ -203,7 +232,7 @@ export default function AdminCouponsPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-ivory-300">
-                  {!isMounted ? (
+                  {!isMounted || isLoading ? (
                     <tr>
                       <td data-label="" colSpan={10} className="p-4 sm:p-8 text-center text-ink-muted text-xs font-semibold">
                         Loading Coupons...
@@ -275,7 +304,8 @@ export default function AdminCouponsPage() {
                         <td data-label="Top Marquee" className="px-2 py-3">
                           <button
                             type="button"
-                            onClick={() => updateCoupon(c.id, { showInNavbar: !c.showInNavbar })}
+                            disabled={busyCouponId === c.id}
+                            onClick={() => changeCoupon(c.id, { showInNavbar: !c.showInNavbar })}
                             className={`px-2.5 py-1 rounded text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer ${
                               c.showInNavbar
                                 ? "bg-amber-100 text-amber-900 border border-amber-400 font-extrabold shadow-sm"
@@ -289,7 +319,8 @@ export default function AdminCouponsPage() {
                         </td>
                         <td data-label="Status" className="px-2 py-3">
                           <button
-                            onClick={() => updateCoupon(c.id, { isActive: !c.isActive })}
+                            disabled={busyCouponId === c.id}
+                            onClick={() => changeCoupon(c.id, { isActive: !c.isActive })}
                             className={`px-2.5 py-1 rounded text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer ${
                               c.isActive
                                 ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
@@ -308,7 +339,8 @@ export default function AdminCouponsPage() {
                             <Pencil className="w-3.5 h-3.5" />
                           </button>
                           <button
-                            onClick={() => deleteCoupon(c.id)}
+                            disabled={busyCouponId === c.id}
+                            onClick={() => removeSavedCoupon(c.id)}
                             className="p-1.5 text-crimson hover:bg-crimson hover:text-ivory border border-crimson/30 transition-colors inline-block cursor-pointer"
                             title="Delete Coupon"
                           >
@@ -349,6 +381,7 @@ export default function AdminCouponsPage() {
 
             <div className="p-6 sm:p-8 space-y-6">
               <form onSubmit={handleSubmit} className="space-y-6">
+                {actionError && <p role="alert" className="rounded border border-crimson/30 bg-crimson/5 p-3 text-sm text-crimson">{actionError}</p>}
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
                   
                   {/* Left Controls Column (7 Columns) */}
@@ -614,9 +647,10 @@ export default function AdminCouponsPage() {
                   </button>
                   <button
                     type="submit"
+                    disabled={savingCoupon}
                     className="px-8 py-3 bg-crimson hover:bg-crimson-800 text-ivory text-xs uppercase tracking-[0.2em] font-semibold shadow-lg transition-colors cursor-pointer"
                   >
-                    <span>{editingCouponId ? "Save Coupon Changes" : "SAVE COUPON"}</span>
+                    <span>{savingCoupon ? "Saving…" : editingCouponId ? "Save Coupon Changes" : "SAVE COUPON"}</span>
                   </button>
                 </div>
               </form>

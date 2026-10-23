@@ -7,6 +7,7 @@ import { useStore } from "@/context/StoreContext";
 import { formatPrice } from "@/lib/utils";
 import type { Product } from "@/lib/mockData";
 import ProductDetailModal from "@/components/ProductDetailModal";
+import { productCardUrl } from "@/lib/productImages";
 
 export default function ProductSearch({ bottomNav = false }: { bottomNav?: boolean }) {
   const { products, lifestyleTags, isLoading } = useStore();
@@ -61,7 +62,7 @@ export default function ProductSearch({ bottomNav = false }: { bottomNav?: boole
           <p role="status" className="text-xs text-ink-muted mb-4">{isLoading ? "Loading products…" : `${results.length} product${results.length === 1 ? "" : "s"} found`}</p>
           {!isLoading && results.length === 0 && <p className="py-8 text-center text-sm text-ink-muted">No matches. Try another product name or lifestyle tag.</p>}
           {!isLoading && <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">{results.map(product => <button key={product.id} type="button" onClick={() => { setOpen(false); setSelected(product); }} className="flex items-center gap-4 p-3 border border-ivory-300 text-left hover:border-gold hover:bg-ivory-200 transition-colors">
-            <div className="relative w-16 h-20 shrink-0 bg-ivory-200">{product.images[0] && <Image src={product.images[0]} alt="" fill sizes="64px" className="object-cover" />}</div>
+            <div className="relative w-16 h-20 shrink-0 bg-ivory-200">{product.images[0] && <Image src={productCardUrl(product.images[0])} alt="" fill sizes="64px" className="object-cover" />}</div>
             <div className="min-w-0 flex-1"><h3 className="font-serif text-lg leading-tight line-clamp-2">{product.name}</h3><p className="text-[10px] text-ink-muted mt-1 line-clamp-1">{product.lifestyleTags.map(value => `#${value}`).join(" · ")}</p><p className="text-sm text-crimson mt-2">{formatPrice(product.price)}</p></div><ArrowRight className="w-4 h-4 shrink-0 text-gold" />
           </button>)}</div>}
         </div>

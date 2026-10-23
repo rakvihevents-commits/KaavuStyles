@@ -22,7 +22,6 @@ import {
   INITIAL_SIZES,
   INITIAL_COLORS,
   INITIAL_INSTAGRAM_POSTS,
-  INITIAL_COUPONS,
   INITIAL_REGISTERED_USERS,
 } from "@/lib/mockData";
 import { cleanOrderItems } from "@/lib/order-images";
@@ -40,6 +39,7 @@ import {
   mapDbSizeToSize,
   mapDbColorToColor,
   mapDbIgToIg,
+  mapDbCouponToCoupon,
 } from "@/lib/supabase";
 import { uploadSingleImage, uploadMultipleImages } from "@/lib/storageUpload";
 
@@ -72,6 +72,7 @@ interface StoreContextType {
   colors: ColorOption[];
   instagramPosts: InstagramPost[];
   coupons: Coupon[];
+  couponsError: string;
   appliedCoupon: Coupon | null;
   cart: CartItem[];
   wishlist: string[];
@@ -150,6 +151,17 @@ interface StoreContextType {
 
 const StoreContext = createContext<StoreContextType | undefined>(undefined);
 
+async function saveCouponToServer(method: "POST" | "PATCH" | "DELETE", body: Record<string, unknown>): Promise<{ coupon?: Coupon; deletedId?: string }> {
+  const response = await fetch("/api/admin/coupons", {
+    method,
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  const result = await response.json();
+  if (!response.ok) throw new Error(result?.error || "Could not save coupon.");
+  return result;
+}
+
 export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [products, setProducts] = useState<Product[]>(INITIAL_PRODUCTS);
   const [categories, setCategories] = useState<Category[]>(INITIAL_CATEGORIES);
@@ -173,19 +185,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [sizes, setSizes] = useState<SizeOption[]>(INITIAL_SIZES);
   const [colors, setColors] = useState<ColorOption[]>(INITIAL_COLORS);
   const [instagramPosts, setInstagramPosts] = useState<InstagramPost[]>(INITIAL_INSTAGRAM_POSTS);
-  const [coupons, setCoupons] = useState<Coupon[]>(() => {
-    if (typeof window !== "undefined") {
-      try {
-        const saved = localStorage.getItem("ks_coupons");
-        if (saved !== null) {
-          return JSON.parse(saved);
-        }
-      } catch (e) {
-        console.warn("Could not parse ks_coupons from localStorage:", e);
-      }
-    }
-    return INITIAL_COUPONS;
-  });
+  const [coupons, setCoupons] = useState<Coupon[]>([]);
+  const [couponsError, setCouponsError] = useState(isSupabaseConfigured ? "" : "Supabase is not configured. Coupons cannot be loaded or saved.");
   const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null);
 
   const [cart, setCart] = useState<CartItem[]>(() => {
@@ -306,6 +307,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             { data: sData },
             { data: colData },
             { data: igData },
+            { data: couponData, error: couponError },
           ] = await Promise.all([
             supabase.from("products").select("*").order("created_at", { ascending: false }).then(result => {
               if (!cancelled && !result.error && result.data) setProducts(result.data.map(mapDbProductToProduct));
@@ -322,6 +324,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
               if (!cancelled && !result.error && result.data) setInstagramPosts(result.data.map(mapDbIgToIg));
               return result;
             }),
+            supabase.from("coupons").select("*").order("created_at", { ascending: false }),
           ]);
 
           if (!pErr && pData && pData.length > 0) setProducts(pData.map(mapDbProductToProduct));
@@ -330,6 +333,11 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
           if (sData && sData.length > 0) setSizes(sData.map(mapDbSizeToSize));
           if (colData && colData.length > 0) setColors(colData.map(mapDbColorToColor));
           if (igData && igData.length > 0) setInstagramPosts(igData.map(mapDbIgToIg));
+          if (!cancelled && !couponError && couponData) {
+            setCoupons(couponData.map(mapDbCouponToCoupon));
+            setCouponsError("");
+          }
+          if (!cancelled && couponError) setCouponsError(`Could not load coupons: ${couponError.message}`);
 
           try {
             const { data: uData, error: uErr } = await supabase.from("registered_users").select("*").order("created_at", { ascending: false });
@@ -359,11 +367,10 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             try { setRegisteredUsers(JSON.parse(savedUsers)); } catch {}
           }
 
-          const savedCoupons = localStorage.getItem("ks_coupons");
-          if (savedCoupons) setCoupons(JSON.parse(savedCoupons));
         }
       } catch (err) {
         console.error("Error connecting to Supabase database:", err);
+        if (!cancelled && isSupabaseConfigured) setCouponsError("Could not load coupons. Please refresh and try again.");
       } finally {
         setIsLoading(false);
       }
@@ -1183,59 +1190,31 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   };
 
   const addCoupon = async (couponData: Omit<Coupon, "id" | "timesUsed">) => {
-    const newCoupon: Coupon = {
-      ...couponData,
-      id: `coup-${Date.now()}`,
-      timesUsed: 0,
-    };
-    setCoupons((prev) => {
-      const updated = [newCoupon, ...prev];
-      if (typeof window !== "undefined") {
-        try {
-          localStorage.setItem("ks_coupons", JSON.stringify(updated));
-        } catch (e) {}
-      }
-      return updated;
-    });
+    if (!isSupabaseConfigured) throw new Error("Supabase is not configured. Coupon was not saved.");
+    const { coupon } = await saveCouponToServer("POST", { coupon: couponData });
+    if (!coupon) throw new Error("Coupon was not returned after saving.");
+    setCoupons((prev) => [coupon, ...prev]);
   };
 
   const updateCoupon = async (id: string, updatedFields: Partial<Coupon>) => {
-    setCoupons((prev) => {
-      const updated = prev.map((c) => (c.id === id ? { ...c, ...updatedFields } : c));
-      if (typeof window !== "undefined") {
-        try {
-          localStorage.setItem("ks_coupons", JSON.stringify(updated));
-        } catch (e) {}
-      }
-      return updated;
-    });
-    if (appliedCoupon && appliedCoupon.id === id) {
-      setAppliedCoupon((prev) => (prev ? { ...prev, ...updatedFields } : null));
-    }
+    if (!isSupabaseConfigured) throw new Error("Supabase is not configured. Coupon was not updated.");
+    const current = coupons.find((coupon) => coupon.id === id);
+    if (!current) throw new Error("Coupon no longer exists. Refresh the page.");
+    const body = Object.keys(updatedFields).every((key) => key === "isActive" || key === "showInNavbar")
+      ? { id, fields: updatedFields }
+      : { id, coupon: { ...current, ...updatedFields } };
+    const { coupon } = await saveCouponToServer("PATCH", body);
+    if (!coupon) throw new Error("Coupon was not returned after saving.");
+    setCoupons((prev) => prev.map((item) => item.id === id ? coupon : item));
+    if (appliedCoupon?.id === id) setAppliedCoupon(coupon);
   };
 
   const deleteCoupon = async (id: string) => {
-    setCoupons((prev) => {
-      const updated = prev.filter((c) => c.id !== id);
-      if (typeof window !== "undefined") {
-        try {
-          localStorage.setItem("ks_coupons", JSON.stringify(updated));
-        } catch (e) {}
-      }
-      return updated;
-    });
-
-    if (appliedCoupon && appliedCoupon.id === id) {
-      setAppliedCoupon(null);
-    }
-
-    if (isSupabaseConfigured) {
-      try {
-        await supabase.from("coupons").delete().eq("id", id);
-      } catch (err) {
-        console.error("Error deleting coupon from Supabase:", err);
-      }
-    }
+    if (!isSupabaseConfigured) throw new Error("Supabase is not configured. Coupon was not deleted.");
+    const { deletedId } = await saveCouponToServer("DELETE", { id });
+    if (deletedId !== id) throw new Error("Coupon deletion was not confirmed.");
+    setCoupons((prev) => prev.filter((coupon) => coupon.id !== id));
+    if (appliedCoupon?.id === id) setAppliedCoupon(null);
   };
 
   const registerUser = async (name: string, email: string, phone: string) => {
@@ -1325,6 +1304,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         colors,
         instagramPosts,
         coupons,
+        couponsError,
         appliedCoupon,
         cart,
         wishlist,

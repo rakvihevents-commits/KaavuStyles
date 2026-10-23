@@ -150,6 +150,7 @@ export default function AdminInstagramPage() {
                 single={true}
                 label="Instagram Photo File"
                 folder="instagram"
+                imageSlot="instagram"
               />
 
               <div>

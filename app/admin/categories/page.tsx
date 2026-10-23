@@ -143,6 +143,7 @@ export default function AdminCategoriesPage() {
                 single={true}
                 label="Category Cover Image File"
                 folder="categories"
+                imageSlot="category"
               />
 
               <button

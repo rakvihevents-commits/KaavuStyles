@@ -4,6 +4,8 @@
  * Guarantees that raw data:image/... base64 strings are NEVER saved to the database.
  */
 
+import { MAX_ORIGINAL_IMAGE_BYTES } from "@/lib/productImageUpload";
+
 export function isBase64Image(val: unknown): boolean {
   return typeof val === "string" && val.startsWith("data:image/");
 }
@@ -32,11 +34,16 @@ export async function uploadSingleImage(
     return image;
   }
 
+  const uploadBlob = typeof image === "string" ? base64ToBlob(image) : image;
+  if (uploadBlob.size > MAX_ORIGINAL_IMAGE_BYTES) {
+    throw new Error("Cannot upload an image over 1 MB. Choose an image of 1 MB or less.");
+  }
+
   const formData = new FormData();
   formData.append("folder", folder);
 
   if (typeof image === "string") {
-    const blob = base64ToBlob(image);
+    const blob = uploadBlob;
     const ext = (blob.type.split("/")[1] || "webp").replace("jpeg", "jpg");
     formData.append("file", blob, `upload-${Date.now()}-${Math.random().toString(36).substring(2, 6)}.${ext}`);
   } else if (image instanceof File) {
