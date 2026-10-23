@@ -127,8 +127,8 @@ export default function HomePage() {
               <Sparkles className="w-3.5 h-3.5 text-gold flex-shrink-0" />
               <span>Style, your Way </span>
             </span>
-            <h2 className="font-serif text-2xl sm:text-2xl uppercase font-light text-ink text-center md:text-left">
-              Which Version <span className="text-crimson font-normal italic">are you Today ?</span>
+            <h2 className="whitespace-nowrap font-serif text-[clamp(1rem,5.5vw,1.5rem)] sm:text-2xl uppercase font-light tracking-tight text-ink text-center md:text-left">
+              Which Version <span className="text-crimson font-normal italic">are you Today{"\u00a0"}?</span>
             </h2>
           </div>
           <Link
