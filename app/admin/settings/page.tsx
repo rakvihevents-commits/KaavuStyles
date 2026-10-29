@@ -60,14 +60,14 @@ export default function AdminSettingsPage() {
           const emailVal = currentUser?.email || "admin@kaavustyle.com";
           setCurrentEmail(emailVal);
           setNewEmail(emailVal);
-          setActivePassword("Kaavu@admin123");
+          setActivePassword("");
         }
       } catch (e) {
         if (isMounted) {
           const emailVal = currentUser?.email || "admin@kaavustyle.com";
           setCurrentEmail(emailVal);
           setNewEmail(emailVal);
-          setActivePassword("Kaavu@admin123");
+          setActivePassword("");
         }
       } finally {
         if (isMounted) setIsLoading(false);

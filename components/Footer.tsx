@@ -26,7 +26,7 @@ export default function Footer() {
           
           {/* COLUMN 1: BRAND ESSENCE & STORY */}
           <div className="space-y-4">
-            <Link href="/" className="flex items-center space-x-3.5 group">
+            <Link prefetch={false} href="/" className="flex items-center space-x-3.5 group">
               <div className="relative w-11 h-11 rounded-full border-2 border-gold overflow-hidden flex-shrink-0 bg-ivory shadow-md group-hover:scale-105 transition-transform">
                 <Image src="/icon.webp" alt="Kaavu Styles" fill className="object-cover" />
               </div>
@@ -71,37 +71,37 @@ export default function Footer() {
             </h4>
             <ul className="space-y-2.5 text-xs uppercase tracking-[0.18em] font-sans">
               <li>
-                <Link href="/" className="text-ivory-200 hover:text-[#E5C378] transition-colors flex items-center space-x-1.5 group">
+                <Link prefetch={false} href="/" className="text-ivory-200 hover:text-[#E5C378] transition-colors flex items-center space-x-1.5 group">
                   <ChevronRight className="w-3 h-3 text-gold opacity-0 group-hover:opacity-100 transition-opacity" />
                   <span>Home</span>
                 </Link>
               </li>
               <li>
-                <Link href="/shop" className="text-ivory-200 hover:text-[#E5C378] transition-colors flex items-center space-x-1.5 group">
+                <Link prefetch={false} href="/shop" className="text-ivory-200 hover:text-[#E5C378] transition-colors flex items-center space-x-1.5 group">
                   <ChevronRight className="w-3 h-3 text-gold opacity-0 group-hover:opacity-100 transition-opacity" />
                   <span>Shop Collections</span>
                 </Link>
               </li>
               <li>
-                <Link href="/categories" className="text-ivory-200 hover:text-[#E5C378] transition-colors flex items-center space-x-1.5 group">
+                <Link prefetch={false} href="/categories" className="text-ivory-200 hover:text-[#E5C378] transition-colors flex items-center space-x-1.5 group">
                   <ChevronRight className="w-3 h-3 text-gold opacity-0 group-hover:opacity-100 transition-opacity" />
                   <span>All Categories</span>
                 </Link>
               </li>
               <li>
-                <Link href="/about" className="text-ivory-200 hover:text-[#E5C378] transition-colors flex items-center space-x-1.5 group">
+                <Link prefetch={false} href="/about" className="text-ivory-200 hover:text-[#E5C378] transition-colors flex items-center space-x-1.5 group">
                   <ChevronRight className="w-3 h-3 text-gold opacity-0 group-hover:opacity-100 transition-opacity" />
                   <span>About Us</span>
                 </Link>
               </li>
               <li>
-                <Link href="/story" className="text-ivory-200 hover:text-[#E5C378] transition-colors flex items-center space-x-1.5 group">
+                <Link prefetch={false} href="/story" className="text-ivory-200 hover:text-[#E5C378] transition-colors flex items-center space-x-1.5 group">
                   <ChevronRight className="w-3 h-3 text-gold opacity-0 group-hover:opacity-100 transition-opacity" />
                   <span>Our Story</span>
                 </Link>
               </li>
               <li>
-                <Link href="/contact" className="text-ivory-200 hover:text-[#E5C378] transition-colors flex items-center space-x-1.5 group">
+                <Link prefetch={false} href="/contact" className="text-ivory-200 hover:text-[#E5C378] transition-colors flex items-center space-x-1.5 group">
                   <ChevronRight className="w-3 h-3 text-gold opacity-0 group-hover:opacity-100 transition-opacity" />
                   <span>Contact Us</span>
                 </Link>
@@ -117,7 +117,7 @@ export default function Footer() {
             <ul className="space-y-2.5 text-xs uppercase tracking-[0.18em] font-sans">
               {categories.slice(0, 5).map((cat) => (
                 <li key={cat.id}>
-                  <Link
+                  <Link prefetch={false}
                     href={`/shop?category=${encodeURIComponent(cat.slug || cat.id)}`}
                     className="text-ivory-200 hover:text-[#E5C378] transition-colors flex items-center space-x-1.5 group"
                   >
@@ -127,7 +127,7 @@ export default function Footer() {
                 </li>
               ))}
               <li>
-                <Link href="/catory" className="text-[#E5C378] font-bold hover:underline flex items-center space-x-1 pt-1">
+                <Link prefetch={false} href="/catory" className="text-[#E5C378] font-bold hover:underline flex items-center space-x-1 pt-1">
                   <span>View All Categories →</span>
                 </Link>
               </li>
@@ -141,19 +141,19 @@ export default function Footer() {
             </h4>
             <ul className="space-y-2.5 text-xs text-ivory-200 tracking-wider font-sans">
               <li>
-                <Link href="/terms" className="hover:text-[#E5C378] transition-colors flex items-center space-x-1.5 uppercase tracking-[0.15em]">
+                <Link prefetch={false} href="/terms" className="hover:text-[#E5C378] transition-colors flex items-center space-x-1.5 uppercase tracking-[0.15em]">
                   <ChevronRight className="w-3 h-3 text-gold" />
                   <span>Terms & Conditions</span>
                 </Link>
               </li>
               <li>
-                <Link href="/privacy" className="hover:text-[#E5C378] transition-colors flex items-center space-x-1.5 uppercase tracking-[0.15em]">
+                <Link prefetch={false} href="/privacy" className="hover:text-[#E5C378] transition-colors flex items-center space-x-1.5 uppercase tracking-[0.15em]">
                   <ChevronRight className="w-3 h-3 text-gold" />
                   <span>Privacy Policy</span>
                 </Link>
               </li>
               <li>
-                <Link href="/orders" className="hover:text-[#E5C378] transition-colors flex items-center space-x-1.5 uppercase tracking-[0.15em]">
+                <Link prefetch={false} href="/orders" className="hover:text-[#E5C378] transition-colors flex items-center space-x-1.5 uppercase tracking-[0.15em]">
                   <ChevronRight className="w-3 h-3 text-gold" />
                   <span>Track My Orders</span>
                 </Link>

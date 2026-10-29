@@ -60,7 +60,7 @@ export default function AdminHeader({ title }: { title: string }) {
       </div>
 
       <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-        <Link
+        <Link prefetch={false}
           href="/"
           target="_blank"
           aria-label="Open live storefront"
@@ -70,7 +70,7 @@ export default function AdminHeader({ title }: { title: string }) {
           <ExternalLink className="w-3.5 h-3.5 text-gold" />
         </Link>
 
-        <Link
+        <Link prefetch={false}
           href="/admin/settings"
           title="Admin Security & Password Settings"
           className="hidden sm:flex items-center space-x-2 bg-ivory hover:bg-ivory-200 border border-ivory-300 hover:border-gold px-3 py-1.5 rounded transition-all group"

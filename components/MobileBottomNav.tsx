@@ -25,7 +25,7 @@ export default function MobileBottomNav() {
   return (
     <div className="fixed bottom-0 left-0 right-0 z-40 bg-[#2B0B14] border-t-2 border-gold/40 shadow-2xl px-2 py-2 flex items-center justify-around text-ivory lg:hidden backdrop-blur-md">
       {/* 1. HOME */}
-      <Link
+      <Link prefetch={false}
         href="/"
         className={`flex flex-col items-center justify-center space-y-0.5 px-2 py-1 transition-all ${
           pathname === "/" ? "text-[#E5C378] font-bold" : "text-ivory-300 hover:text-white"
@@ -36,7 +36,7 @@ export default function MobileBottomNav() {
       </Link>
 
       {/* 2. SHOP */}
-      <Link
+      <Link prefetch={false}
         href="/shop"
         className={`flex flex-col items-center justify-center space-y-0.5 px-2 py-1 transition-all ${
           pathname === "/shop" ? "text-[#E5C378] font-bold" : "text-ivory-300 hover:text-white"
@@ -47,7 +47,7 @@ export default function MobileBottomNav() {
       </Link>
 
       {/* 3. WISHLIST */}
-      <Link
+      <Link prefetch={false}
         href="/wishlist"
         className={`relative flex flex-col items-center justify-center space-y-0.5 px-2 py-1 transition-all ${
           pathname === "/wishlist" ? "text-[#E5C378] font-bold" : "text-ivory-300 hover:text-white"
@@ -82,7 +82,7 @@ export default function MobileBottomNav() {
 
       {/* 5. MY ORDERS (CONDITIONALLY RENDERED ONLY AFTER MOUNT & LOGIN!) */}
       {isMounted && currentUser && (
-        <Link
+        <Link prefetch={false}
           href="/orders"
           className={`flex flex-col items-center justify-center space-y-0.5 px-2 py-1 transition-all ${
             pathname === "/orders" ? "text-[#E5C378] font-bold" : "text-ivory-300 hover:text-white"

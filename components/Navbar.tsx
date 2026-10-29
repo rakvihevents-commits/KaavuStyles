@@ -166,7 +166,7 @@ export default function Navbar() {
       <div className="w-full px-4 sm:px-6 lg:px-12">
         <div className="flex items-center justify-between h-14 sm:h-16">
           {/* BRAND LOGO */}
-          <Link href="/" className="flex min-w-0 items-center space-x-2.5 sm:space-x-3 group">
+          <Link prefetch={false} href="/" className="flex min-w-0 items-center space-x-2.5 sm:space-x-3 group">
             <div className="relative w-8 h-8 sm:w-9.5 sm:h-9.5 rounded-full overflow-hidden border-2 border-gold shadow-sm bg-ivory flex items-center justify-center group-hover:scale-105 transition-transform">
               <Image
                 src="/icon.webp"
@@ -188,21 +188,21 @@ export default function Navbar() {
 
           {/* DESKTOP NAVIGATION TABS */}
           <nav className="hidden lg:flex items-center space-x-8 text-xs font-medium tracking-[0.2em] uppercase text-ink">
-            <Link
+            <Link prefetch={false}
               href="/"
               className={`hover:text-burgundy transition-colors ${pathname === "/" ? "text-burgundy font-bold border-b-2 border-gold pb-1" : ""
                 }`}
             >
               Home
             </Link>
-            <Link
+            <Link prefetch={false}
               href="/catory"
               className={`hover:text-burgundy transition-colors ${pathname === "/catory" || pathname === "/categories" ? "text-burgundy font-bold border-b-2 border-gold pb-1" : ""
                 }`}
             >
               Categories
             </Link>
-            <Link
+            <Link prefetch={false}
               href="/shop"
               className={`hover:text-burgundy transition-colors ${pathname === "/shop" ? "text-burgundy font-bold border-b-2 border-gold pb-1" : ""
                 }`}
@@ -210,14 +210,14 @@ export default function Navbar() {
               Shop Collections
             </Link>
 
-            <Link
+            <Link prefetch={false}
               href="/story"
               className={`hover:text-burgundy transition-colors ${pathname === "/story" || pathname === "/about" ? "text-burgundy font-bold border-b-2 border-gold pb-1" : ""
                 }`}
             >
               Our Story
             </Link>
-            <Link
+            <Link prefetch={false}
               href="/contact"
               className={`hover:text-burgundy transition-colors ${pathname === "/contact" ? "text-burgundy font-bold border-b-2 border-gold pb-1" : ""
                 }`}
@@ -230,7 +230,7 @@ export default function Navbar() {
           <div className="hidden lg:flex items-center space-x-5">
             <ProductSearch />
             {/* Wishlist Icon */}
-            <Link
+            <Link prefetch={false}
               href="/wishlist"
               className="relative p-2 text-ink hover:text-burgundy transition-colors"
               title="My Wishlist"
@@ -295,7 +295,7 @@ export default function Navbar() {
 
                   {/* Dropdown Links */}
                   <div className="py-1 space-y-0.5 text-xs font-sans uppercase tracking-wider">
-                    <Link
+                    <Link prefetch={false}
                       href="/orders"
                       onClick={() => setProfileDropdownOpen(false)}
                       className="flex items-center space-x-2.5 px-3 py-2 text-ink hover:bg-crimson hover:text-ivory transition-colors font-medium"
@@ -305,7 +305,7 @@ export default function Navbar() {
                     </Link>
 
                     {currentUser.role === "admin" && (
-                      <Link
+                      <Link prefetch={false}
                         href="/admin/dashboard"
                         onClick={() => setProfileDropdownOpen(false)}
                         className="flex items-center space-x-2.5 px-3 py-2 text-gold font-bold hover:bg-gold hover:text-ivory transition-colors"
@@ -355,7 +355,7 @@ export default function Navbar() {
                       <p className="font-serif font-bold text-burgundy uppercase truncate">{currentUser.name}</p>
                       <p className="text-[9px] text-ink-muted truncate font-mono">{currentUser.email}</p>
                     </div>
-                    <Link
+                    <Link prefetch={false}
                       href="/orders"
                       onClick={() => setMobileProfileOpen(false)}
                       className="flex items-center space-x-2 px-3 py-2 text-ink hover:bg-crimson hover:text-ivory transition-colors text-xs font-medium uppercase tracking-wider"
@@ -364,7 +364,7 @@ export default function Navbar() {
                       <span>My Orders</span>
                     </Link>
                     {currentUser.role === "admin" && (
-                      <Link
+                      <Link prefetch={false}
                         href="/admin/dashboard"
                         onClick={() => setMobileProfileOpen(false)}
                         className="flex items-center space-x-2 px-3 py-2 text-gold font-bold hover:bg-gold hover:text-ivory transition-colors text-xs uppercase tracking-wider"
@@ -471,14 +471,14 @@ export default function Navbar() {
               </div>
 
               <nav className="flex flex-col space-y-5 pt-6 font-serif text-xl text-ink">
-                <Link
+                <Link prefetch={false}
                   href="/"
                   onClick={() => setMobileMenuOpen(false)}
                   className="hover:text-burgundy transition-colors"
                 >
                   Home
                 </Link>
-                <Link
+                <Link prefetch={false}
                   href="/shop"
                   onClick={() => setMobileMenuOpen(false)}
                   className="hover:text-burgundy transition-colors"
@@ -487,7 +487,7 @@ export default function Navbar() {
                 </Link>
 
                 {currentUser && (
-                  <Link
+                  <Link prefetch={false}
                     href="/orders"
                     onClick={() => setMobileMenuOpen(false)}
                     className="hover:text-burgundy transition-colors flex items-center justify-between"
@@ -497,7 +497,7 @@ export default function Navbar() {
                   </Link>
                 )}
 
-                <Link
+                <Link prefetch={false}
                   href="/wishlist"
                   onClick={() => setMobileMenuOpen(false)}
                   className="hover:text-burgundy transition-colors flex items-center justify-between"
@@ -511,7 +511,7 @@ export default function Navbar() {
                 </Link>
 
                 {currentUser?.role === "admin" && (
-                  <Link
+                  <Link prefetch={false}
                     href="/admin/dashboard"
                     onClick={() => setMobileMenuOpen(false)}
                     className="text-gold font-bold hover:text-burgundy transition-colors flex items-center space-x-2"
@@ -521,14 +521,14 @@ export default function Navbar() {
                   </Link>
                 )}
 
-                <Link
+                <Link prefetch={false}
                   href="/story"
                   onClick={() => setMobileMenuOpen(false)}
                   className="hover:text-burgundy transition-colors"
                 >
                   Our Story
                 </Link>
-                <Link
+                <Link prefetch={false}
                   href="/contact"
                   onClick={() => setMobileMenuOpen(false)}
                   className="hover:text-burgundy transition-colors"

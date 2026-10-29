@@ -36,7 +36,9 @@ export async function getAdminCredentials(): Promise<AdminCredentials> {
         .eq("id", "primary")
         .maybeSingle();
 
-      if (!error && data && data.email && data.password) {
+      if (error) throw error;
+
+      if (data && data.email && data.password) {
         const emails = [data.email.trim().toLowerCase()];
         if (!emails.includes("admin@kaavustyle.com")) emails.push("admin@kaavustyle.com");
         if (!emails.includes("kaavustyles@gmail.com")) emails.push("kaavustyles@gmail.com");
@@ -50,7 +52,7 @@ export async function getAdminCredentials(): Promise<AdminCredentials> {
         };
       }
     } catch (e) {
-      // Table may not exist yet in Supabase - proceed to local fallback
+      throw new Error("Unable to load admin credentials. Please try again later.");
     }
   }
 
@@ -106,9 +108,7 @@ export async function verifyAdminCredentials(email: string, password: string): P
   const currBuf = Buffer.from(current.password);
   const provBuf = Buffer.from(password);
   const isPasswordValid =
-    (currBuf.length === provBuf.length && timingSafeEqual(currBuf, provBuf)) ||
-    password === current.password ||
-    password === "Kaavu@admin123";
+    currBuf.length === provBuf.length && timingSafeEqual(currBuf, provBuf);
 
   return isPasswordValid;
 }
@@ -124,9 +124,7 @@ export async function updateAdminCredentials(params: {
   const currBuf = Buffer.from(current.password);
   const provBuf = Buffer.from(params.currentPassword || "");
   const isMatch =
-    (currBuf.length === provBuf.length && timingSafeEqual(currBuf, provBuf)) ||
-    params.currentPassword === current.password ||
-    params.currentPassword === "Kaavu@admin123";
+    currBuf.length === provBuf.length && timingSafeEqual(currBuf, provBuf);
 
   if (!isMatch) {
     return { success: false, error: "Current admin password is incorrect." };
@@ -173,10 +171,10 @@ export async function updateAdminCredentials(params: {
       if (!upsertErr) {
         savedToSupabase = true;
       } else {
-        console.warn("Supabase upsert warning:", upsertErr.message);
+        return { success: false, error: "Could not save admin credentials. Please try again." };
       }
     } catch (e) {
-      console.warn("Could not save to Supabase admin_credentials table:", e);
+      return { success: false, error: "Could not save admin credentials. Please try again." };
     }
   }
 
@@ -190,7 +188,9 @@ export async function updateAdminCredentials(params: {
     };
     fs.writeFileSync(CREDENTIALS_FILE, JSON.stringify(newCredentials, null, 2), "utf8");
   } catch (err) {
-    console.warn("Could not write to local admin-credentials-store.json:", err);
+    if (!savedToSupabase) {
+      return { success: false, error: "Could not save admin credentials. Please try again." };
+    }
   }
 
   // 6. Update .env.local file on disk (for localhost persistence)

@@ -70,7 +70,7 @@ export default function AdminSidebar() {
     <div className="flex flex-col h-full w-full overflow-hidden">
       {/* 1. Brand Header */}
       <div className="p-5 sm:p-6 border-b border-ink-light bg-ink-light/40 flex-shrink-0">
-        <Link href="/admin/dashboard" className="flex items-center space-x-3">
+        <Link prefetch={false} href="/admin/dashboard" className="flex items-center space-x-3">
           <div className="relative w-10 h-10 rounded-full border border-gold overflow-hidden flex-shrink-0 bg-ivory">
             <Image src="/icon.webp" alt="Kaavu Styles" fill className="object-cover" />
           </div>
@@ -91,7 +91,7 @@ export default function AdminSidebar() {
           const Icon = link.icon;
           const isActive = pathname === link.href || pathname?.startsWith(`${link.href}/`);
           return (
-            <Link
+            <Link prefetch={false}
               key={link.href}
               href={link.href}
               onClick={() => setMobileOpen(false)}
@@ -110,7 +110,7 @@ export default function AdminSidebar() {
 
       {/* 3. Footer / User Info (Fixed Bottom, Never Overlapped) */}
       <div className="p-4 border-t border-ink-light bg-ink-light/30 space-y-2.5 flex-shrink-0">
-        <Link
+        <Link prefetch={false}
           href="/admin/settings"
           title="Admin Security & Password Settings"
           className="flex items-center space-x-2.5 bg-ink-light/60 hover:bg-ink-light p-2.5 rounded border border-ivory-300/10 hover:border-gold/40 transition-colors group cursor-pointer"
@@ -129,7 +129,7 @@ export default function AdminSidebar() {
         </Link>
 
         <div className="grid grid-cols-2 gap-2 pt-1 border-t border-ink-light/40">
-          <Link
+          <Link prefetch={false}
             href="/"
             target="_blank"
             className="flex items-center justify-center space-x-1.5 py-2 px-2 rounded bg-ink-light/40 hover:bg-ink-light text-ivory/80 hover:text-gold text-[11px] font-sans transition-colors"

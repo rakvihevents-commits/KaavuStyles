@@ -39,7 +39,7 @@ export default function StoryNarrative() {
             </p>
             <footer className="mt-2 text-[9px] uppercase tracking-[0.22em] text-gold">The Kaavu ethos</footer>
           </blockquote>
-          <Link href="/story" className="group mt-6 sm:mt-7 inline-flex self-start items-center justify-center gap-4 bg-crimson text-ivory px-6 py-3 text-[11px] uppercase tracking-[0.16em] transition-colors hover:bg-crimson-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-crimson shadow-sm">
+          <Link prefetch={false} href="/story" className="group mt-6 sm:mt-7 inline-flex self-start items-center justify-center gap-4 bg-crimson text-ivory px-6 py-3 text-[11px] uppercase tracking-[0.16em] transition-colors hover:bg-crimson-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-crimson shadow-sm">
             Read full story <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" aria-hidden="true" />
           </Link>
         </div>

@@ -7,6 +7,16 @@ const nextConfig = {
     if (dev) config.cache = { type: 'memory' };
     return config;
   },
+  async headers() {
+    // Cache only public image files, never pages or authenticated API responses.
+    const publicImages = [
+      "/icon.jpeg", "/favicon.png", "/icon.webp", "/foundations-home.webp",
+    ];
+    return publicImages.map((source) => ({
+      source,
+      headers: [{ key: "Cache-Control", value: "public, max-age=86400" }],
+    }));
+  },
   images: {
     unoptimized: true,
     minimumCacheTTL: 86400,

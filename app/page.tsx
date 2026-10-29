@@ -131,7 +131,7 @@ export default function HomePage() {
               Which Version <span className="text-crimson font-normal italic">are you Today{"\u00a0"}?</span>
             </h2>
           </div>
-          <Link
+          <Link prefetch={false}
             href="/catory"
             className="mt-2 md:mt-0 text-xs uppercase tracking-[0.24em] text-crimson font-bold hover:text-gold transition-colors flex items-center justify-center md:justify-start space-x-1 group"
           >
@@ -159,7 +159,7 @@ export default function HomePage() {
             </div>
           ) : (
             categories.slice(0, 5).map((cat, index) => (
-              <Link
+              <Link prefetch={false}
                 key={cat.id}
                 data-reveal="up"
                 style={{ transitionDelay: `${index * 80}ms` }}
@@ -222,7 +222,7 @@ export default function HomePage() {
             >
               <ChevronRight className="w-5 h-5" />
             </button>
-            <Link
+            <Link prefetch={false}
               href="/shop"
               className="text-xs uppercase tracking-[0.2em] text-crimson font-bold hover:text-gold transition-colors pl-2"
             >
@@ -370,7 +370,7 @@ export default function HomePage() {
 
         <div className="relative z-10 w-full px-2 sm:px-6 lg:px-12 grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
           {/* Point 1: Terms of Service - No Return / No Replacement */}
-          <Link
+          <Link prefetch={false}
             href="/terms"
             data-reveal="up"
             className="bg-ivory/5 border border-gold/30 p-3.5 sm:p-6 text-center space-y-1.5 sm:space-y-2 group hover:border-gold hover:bg-ivory/10 transition-all shadow-md block"
@@ -390,7 +390,7 @@ export default function HomePage() {
           </Link>
 
           {/* Point 2: Terms of Service - Artisanal Craftsmanship */}
-          <Link
+          <Link prefetch={false}
             href="/shop"
             data-reveal="up"
             style={{ transitionDelay: "100ms" }}
@@ -411,7 +411,7 @@ export default function HomePage() {
           </Link>
 
           {/* Point 3: Privacy Policy - 100% Encrypted & Private */}
-          <Link
+          <Link prefetch={false}
             href="/privacy"
             data-reveal="up"
             style={{ transitionDelay: "200ms" }}
@@ -432,7 +432,7 @@ export default function HomePage() {
           </Link>
 
           {/* Point 4: Terms of Service & Privacy - Tracked Dispatch & Concierge */}
-          <Link
+          <Link prefetch={false}
             href="/terms"
             data-reveal="up"
             style={{ transitionDelay: "300ms" }}

@@ -68,7 +68,7 @@ export default function CategoriesPage() {
           {isLoading ? Array.from({ length: 8 }, (_, index) => <CategorySkeleton key={index} />) : categories.length === 0 ? <p className="col-span-full py-12 text-center text-ink-muted">No collections available yet. Please check back soon.</p> : categories.map((category) => {
             const count = getCategoryCount(category);
             return (
-              <Link
+              <Link prefetch={false}
                 key={category.id}
                 href={`/shop?category=${encodeURIComponent(category.slug || category.id)}`}
                 className="group relative bg-ivory border-2 border-gold rounded-t-[999px] p-2 shadow-luxury hover:shadow-2xl transition-all duration-500 overflow-hidden flex flex-col justify-between hover-lift"
@@ -122,7 +122,7 @@ export default function CategoriesPage() {
             <p className="text-xs text-ivory-300">
               Browse our complete inventory with instant category filters, color options, and price sorting.
             </p>
-            <Link
+            <Link prefetch={false}
               href="/shop"
               className="inline-flex items-center space-x-2 px-8 py-3.5 bg-crimson hover:bg-crimson-800 text-ivory border border-gold/40 text-xs uppercase tracking-[0.24em] font-bold transition-all shadow-md cursor-pointer mt-2"
             >
