@@ -1,15 +1,16 @@
 import { productCardUrl } from "@/lib/productImages";
 
 export const MAX_ORIGINAL_IMAGE_BYTES = 1_000_000;
+export const MAX_PRODUCT_IMAGE_BYTES = 5_000_000;
 
-function imageSizeIssue(file: File): string | null {
-  return file.size > MAX_ORIGINAL_IMAGE_BYTES
-    ? `Size: ${(file.size / 1_000_000).toFixed(2)} MB exceeds the 1 MB maximum.`
+function imageSizeIssue(file: File, maxBytes = MAX_ORIGINAL_IMAGE_BYTES): string | null {
+  return file.size > maxBytes
+    ? `Size: ${(file.size / 1_000_000).toFixed(2)} MB exceeds the ${maxBytes / 1_000_000} MB maximum.`
     : null;
 }
 
-export function validateOriginalImageSize(file: File): void {
-  const issue = imageSizeIssue(file);
+export function validateOriginalImageSize(file: File, maxBytes = MAX_ORIGINAL_IMAGE_BYTES): void {
+  const issue = imageSizeIssue(file, maxBytes);
   if (issue) throw new Error(`Cannot upload "${file.name}": ${issue}`);
 }
 
@@ -46,7 +47,7 @@ function loadImage(file: File): Promise<HTMLImageElement> {
 
 export async function inspectImageUpload(file: File, slot: ImageSlot | "product" | null): Promise<string[]> {
   const issues: string[] = [];
-  const sizeIssue = imageSizeIssue(file);
+  const sizeIssue = imageSizeIssue(file, slot === "product" ? MAX_PRODUCT_IMAGE_BYTES : MAX_ORIGINAL_IMAGE_BYTES);
   if (sizeIssue) issues.push(sizeIssue);
   if (!file.type.startsWith("image/")) {
     issues.push("Format: Choose an image file.");
@@ -67,7 +68,7 @@ export async function inspectImageUpload(file: File, slot: ImageSlot | "product"
   return issues;
 }
 
-async function makeWebp(image: HTMLImageElement, width: number, height: number, maxBytes: number): Promise<Blob> {
+async function makeWebp(image: HTMLImageElement, width: number, height: number, maxBytes: number, mimeType = "image/webp"): Promise<Blob> {
   const canvas = document.createElement("canvas");
   // Fit within the output bounds without cropping, stretching or upscaling.
   const scale = Math.min(1, width / image.naturalWidth, height / image.naturalHeight);
@@ -80,8 +81,8 @@ async function makeWebp(image: HTMLImageElement, width: number, height: number, 
   context.drawImage(image, 0, 0, canvas.width, canvas.height);
 
   for (const quality of [0.82, 0.75, 0.68, 0.6, 0.52, 0.45]) {
-    const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/webp", quality));
-    if (!blob || blob.type !== "image/webp") throw new WebpEncodingUnavailable();
+    const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, mimeType, quality));
+    if (!blob || blob.type !== mimeType) throw new WebpEncodingUnavailable();
     if (blob.size <= maxBytes) return blob;
   }
   throw new Error(`This image cannot be reduced below ${Math.round(maxBytes / 1024)} KB without excessive quality loss. Choose a simpler photo.`);
@@ -89,7 +90,7 @@ async function makeWebp(image: HTMLImageElement, width: number, height: number, 
 
 export async function prepareProductImage(file: File): Promise<{ detail: Blob; card: Blob }> {
   if (!file.type.startsWith("image/")) throw new Error("Choose an image file.");
-  validateOriginalImageSize(file);
+  validateOriginalImageSize(file, MAX_PRODUCT_IMAGE_BYTES);
   const image = await loadImage(file);
   const detail = await makeWebp(image, PRODUCT_IMAGE_RULES.detail.width, PRODUCT_IMAGE_RULES.detail.height, PRODUCT_IMAGE_RULES.detail.maxBytes);
   const card = await makeWebp(image, PRODUCT_IMAGE_RULES.card.width, PRODUCT_IMAGE_RULES.card.height, PRODUCT_IMAGE_RULES.card.maxBytes);
@@ -127,9 +128,17 @@ export async function uploadSlotImage(output: Blob, slot: ImageSlot): Promise<st
 }
 
 export async function uploadOriginalForServerConversion(file: File, slot: ImageSlot | "product"): Promise<string> {
-  validateOriginalImageSize(file);
+  validateOriginalImageSize(file, slot === "product" ? MAX_PRODUCT_IMAGE_BYTES : MAX_ORIGINAL_IMAGE_BYTES);
   const body = new FormData();
-  body.append("sourceFile", file);
+  // Keep fallback requests small enough for the hosting request body limit.
+  if (slot === "product") {
+    const image = await loadImage(file);
+    const rules = PRODUCT_IMAGE_RULES.detail;
+    const jpeg = await makeWebp(image, rules.width, rules.height, MAX_ORIGINAL_IMAGE_BYTES, "image/jpeg");
+    body.append("sourceFile", jpeg, "product.jpg");
+  } else {
+    body.append("sourceFile", file);
+  }
   if (slot === "product") body.append("productSource", "true");
   else body.append("imageSlot", slot);
   const response = await fetch("/api/upload", { method: "POST", body });

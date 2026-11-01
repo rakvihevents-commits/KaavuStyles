@@ -1,3 +1,4 @@
+import faviconImage from "@/public/favicon.png";
 import type { Metadata } from "next";
 import "./globals.css";
 import { StoreProvider } from "@/context/StoreContext";
@@ -8,7 +9,7 @@ export const metadata: Metadata = {
   description:
     "Kaavu Styles luxury fashion apparel, kurtis, lehengas, and artisanal ensembles.",
   icons: {
-    icon: "/favicon.png",
+    icon: faviconImage.src,
   },
 };
 

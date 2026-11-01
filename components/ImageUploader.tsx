@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useState, useEffect, useId } from "react";
+import React, { useRef, useState, useId } from "react";
 import Image from "next/image";
 import { Upload, X, Link as LinkIcon, Plus, Loader2 } from "lucide-react";
 import { compressAndOptimizeImage } from "@/lib/utils";
@@ -41,22 +41,6 @@ export default function ImageUploader({
   const [isCompressing, setIsCompressing] = useState(false);
   const [dimensions, setDimensions] = useState<Record<string, { width: number; height: number }>>({});
   const isProductUpload = folder === "products";
-
-  // Compute image dimensions whenever images array changes
-  useEffect(() => {
-    images.forEach((imgUrl) => {
-      if (!dimensions[imgUrl]) {
-        const img = new window.Image();
-        img.onload = () => {
-          setDimensions((prev) => ({
-            ...prev,
-            [imgUrl]: { width: img.naturalWidth, height: img.naturalHeight },
-          }));
-        };
-        img.src = imgUrl;
-      }
-    });
-  }, [images, dimensions]);
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -172,10 +156,10 @@ export default function ImageUploader({
       <div className="rounded-xl border-2 border-gold bg-ivory-50 p-3 sm:p-4 shadow-sm" aria-label="Image upload requirements">
         <p className="text-xs font-bold uppercase tracking-wider text-crimson">Image upload requirements</p>
         <div className="mt-2 flex flex-wrap gap-2 text-xs text-ink">
-          <span className="rounded-md border border-gold/50 bg-white px-3 py-2">Original file: <strong>1 MB max</strong></span>
+          <span className="rounded-md border border-gold/50 bg-white px-3 py-2">Original file: <strong>{isProductUpload ? "5 MB" : "1 MB"} max</strong></span>
           <span className="rounded-md border border-gold/50 bg-white px-3 py-2">Dimensions: <strong>Any size or proportions</strong></span>
         </div>
-        <p className="mt-2 text-xs leading-relaxed text-ink-muted">Choose an image under 1 MB. Photos are optimized automatically while keeping their proportions, without cropping or stretching.</p>
+        <p className="mt-2 text-xs leading-relaxed text-ink-muted">Choose an image up to {isProductUpload ? "5 MB" : "1 MB"}. Photos are optimized automatically while keeping their proportions, without cropping or stretching.</p>
       </div>
       <input ref={fileInputRef} type="file" accept="image/*" multiple={!single} onChange={handleFileSelect} disabled={isCompressing} className="hidden" aria-label={label} />
       {isUrlMode && !isProductUpload && !imageSlot && <div className="flex flex-col sm:flex-row gap-2">
@@ -185,7 +169,11 @@ export default function ImageUploader({
       <div className="rounded-xl border border-ivory-300 bg-ivory-50 p-3 sm:p-4">
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
           {images.map((src, index) => <div key={`${src}-${index}`} className="relative aspect-square min-w-0 rounded-lg overflow-hidden border border-ivory-300 bg-white group">
-            <Image src={src} alt={`${label}, photo ${index + 1}`} fill sizes="(max-width: 639px) 40vw, (max-width: 1023px) 180px, 120px" className="object-cover" />
+            <Image src={src} onLoad={(event) => {
+              const { naturalWidth: width, naturalHeight: height } = event.currentTarget;
+              setDimensions((previous) => previous[src]?.width === width && previous[src]?.height === height
+                ? previous : { ...previous, [src]: { width, height } });
+            }} alt={`${label}, photo ${index + 1}`} fill sizes="(max-width: 639px) 40vw, (max-width: 1023px) 180px, 120px" className="object-cover" />
             <button type="button" disabled={isCompressing} aria-label={`Remove photo ${index + 1} from ${label}`} onClick={() => handleRemove(index)} className="absolute top-2 right-2 z-10 inline-flex items-center justify-center w-8 h-8 rounded-full bg-white/95 text-crimson shadow-sm hover:bg-crimson hover:text-white disabled:opacity-50"><X className="w-4 h-4" /></button>
             {index === 0 && <span className="absolute left-2 top-2 bg-ink/80 px-2 py-1 rounded text-[9px] uppercase tracking-wider text-ivory">Cover</span>}
             {dimensions[src] && <span className="absolute bottom-0 inset-x-0 bg-ink/70 text-white text-[9px] text-center py-1">{dimensions[src].width} × {dimensions[src].height} px</span>}

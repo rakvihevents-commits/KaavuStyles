@@ -1,5 +1,6 @@
 "use client";
 
+import siteIcon from "@/public/icon.webp";
 import React, { useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -38,7 +39,7 @@ export default function AdminLoginPage() {
         {/* Header */}
         <div className="text-center space-y-2">
           <div className="relative w-16 h-16 mx-auto rounded-full overflow-hidden border-2 border-gold shadow-md bg-white">
-            <Image src="/icon.webp" alt="Kaavu Styles" fill className="object-cover" priority />
+            <Image src={siteIcon.src} alt="Kaavu Styles" fill className="object-cover" priority />
           </div>
           <h1 className="font-serif text-3xl text-ink uppercase tracking-wider font-normal">
             Kaavu Styles

@@ -1,3 +1,4 @@
+import storyPhoto from "@/public/foundations-home.webp";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
@@ -11,7 +12,7 @@ export default function StoryNarrative() {
           <div className="relative w-48 sm:w-56 lg:w-72 aspect-[3/4] rounded-t-[999px] border-2 border-gold p-2 bg-ivory shadow-luxury flex-shrink-0">
             <div className="relative w-full h-full rounded-t-[990px] overflow-hidden">
               <Image
-                src="/foundations-home.webp"
+                src={storyPhoto.src}
                 alt="Kaavu Styless atelier and drapery"
                 fill
                 sizes="(min-width: 1024px) 288px, (min-width: 640px) 224px, 192px"

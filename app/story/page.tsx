@@ -1,5 +1,6 @@
 "use client";
 
+import storyPhoto from "@/public/foundations-home.webp";
 import React from "react";
 import Image from "next/image";
 import Link from "next/link";
@@ -41,7 +42,7 @@ export default function OurStoryPage() {
           <div className="relative w-full max-w-sm aspect-[3/4] rounded-t-[999px] border-2 border-gold p-2.5 bg-ivory-200 shadow-2xl overflow-hidden group">
             <div className="relative w-full h-full rounded-t-[990px] overflow-hidden">
               <Image
-                src="/foundations-home.webp"
+                src={storyPhoto.src}
                 alt="Kaavu Styless Journey"
                 fill
                 sizes="(min-width: 640px) 384px, 100vw"

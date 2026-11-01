@@ -1,5 +1,6 @@
 "use client";
 
+import siteIcon from "@/public/icon.webp";
 import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
@@ -169,7 +170,7 @@ export default function Navbar() {
           <Link prefetch={false} href="/" className="flex min-w-0 items-center space-x-2.5 sm:space-x-3 group">
             <div className="relative w-8 h-8 sm:w-9.5 sm:h-9.5 rounded-full overflow-hidden border-2 border-gold shadow-sm bg-ivory flex items-center justify-center group-hover:scale-105 transition-transform">
               <Image
-                src="/icon.webp"
+                src={siteIcon.src}
                 alt="Kaavu Styles"
                 fill
                 className="object-cover"
@@ -423,7 +424,7 @@ export default function Navbar() {
               <div className="flex items-center justify-between pb-6 border-b border-ivory-300">
                 <div className="flex items-center space-x-3">
                   <div className="w-8 h-8 rounded-full overflow-hidden relative border border-gold">
-                    <Image src="/icon.webp" alt="Logo" fill className="object-cover" />
+                    <Image src={siteIcon.src} alt="Logo" fill className="object-cover" />
                   </div>
                   <span className="font-serif text-lg text-burgundy font-medium uppercase tracking-widest">
                     Kaavu Styles

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import sharp from "sharp";
-import { IMAGE_SLOT_RULES, MAX_ORIGINAL_IMAGE_BYTES, PRODUCT_IMAGE_RULES, type ImageSlot } from "@/lib/productImageUpload";
+import { IMAGE_SLOT_RULES, MAX_ORIGINAL_IMAGE_BYTES, MAX_PRODUCT_IMAGE_BYTES, PRODUCT_IMAGE_RULES, type ImageSlot } from "@/lib/productImageUpload";
 import { requireAdmin } from "@/lib/admin-session";
 
 export const dynamic = "force-dynamic";
@@ -30,12 +30,12 @@ function webpDimensions(buffer: Buffer): { width: number; height: number } | nul
   return null;
 }
 
-async function convertSource(file: File, width: number, height: number, maxBytes: number): Promise<Buffer> {
+async function convertSource(file: File, width: number, height: number, maxBytes: number, maxSourceBytes = MAX_ORIGINAL_IMAGE_BYTES): Promise<Buffer> {
   if (!file.type.startsWith("image/")) {
     throw new Error("Choose an image file.");
   }
-  if (file.size > MAX_ORIGINAL_IMAGE_BYTES) {
-    throw new Error("Cannot upload an image over 1 MB. Choose an image of 1 MB or less.");
+  if (file.size > maxSourceBytes) {
+    throw new Error(`Cannot upload an image over ${maxSourceBytes / 1_000_000} MB.`);
   }
   const source = Buffer.from(await file.arrayBuffer());
   let metadata;
@@ -112,8 +112,8 @@ export async function POST(req: NextRequest) {
           const source = formData.get("sourceFile");
           if (!(source instanceof File)) return NextResponse.json({ error: "An image file is required." }, { status: 400 });
           try {
-            detailBytes = await convertSource(source, PRODUCT_IMAGE_RULES.detail.width, PRODUCT_IMAGE_RULES.detail.height, PRODUCT_IMAGE_RULES.detail.maxBytes);
-            cardBytes = await convertSource(source, PRODUCT_IMAGE_RULES.card.width, PRODUCT_IMAGE_RULES.card.height, PRODUCT_IMAGE_RULES.card.maxBytes);
+            detailBytes = await convertSource(source, PRODUCT_IMAGE_RULES.detail.width, PRODUCT_IMAGE_RULES.detail.height, PRODUCT_IMAGE_RULES.detail.maxBytes, MAX_PRODUCT_IMAGE_BYTES);
+            cardBytes = await convertSource(source, PRODUCT_IMAGE_RULES.card.width, PRODUCT_IMAGE_RULES.card.height, PRODUCT_IMAGE_RULES.card.maxBytes, MAX_PRODUCT_IMAGE_BYTES);
           } catch (error) {
             return NextResponse.json({ error: error instanceof Error ? error.message : "Could not process this image." }, { status: 400 });
           }
