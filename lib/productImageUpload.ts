@@ -61,24 +61,23 @@ export async function inspectImageUpload(file: File, slot: ImageSlot | "product"
     issues.push("Dimensions: Could not read this image.");
     return issues;
   }
-  const width = image.naturalWidth;
-  const height = image.naturalHeight;
-  const rules = slot === "product" ? PRODUCT_IMAGE_RULES.detail : IMAGE_SLOT_RULES[slot];
-  if (width < rules.width || height < rules.height || width * rules.height !== height * rules.width) {
-    issues.push(`Dimensions: ${width} × ${height} px. Required: at least ${rules.width} × ${rules.height} px with the same proportions.`);
+  if (!image.naturalWidth || !image.naturalHeight) {
+    issues.push("Could not read this image.");
   }
   return issues;
 }
 
 async function makeWebp(image: HTMLImageElement, width: number, height: number, maxBytes: number): Promise<Blob> {
   const canvas = document.createElement("canvas");
-  canvas.width = width;
-  canvas.height = height;
+  // Fit within the output bounds without cropping, stretching or upscaling.
+  const scale = Math.min(1, width / image.naturalWidth, height / image.naturalHeight);
+  canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
+  canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
   const context = canvas.getContext("2d");
   if (!context) throw new Error("This browser cannot process images.");
   context.imageSmoothingEnabled = true;
   context.imageSmoothingQuality = "high";
-  context.drawImage(image, 0, 0, width, height);
+  context.drawImage(image, 0, 0, canvas.width, canvas.height);
 
   for (const quality of [0.82, 0.75, 0.68, 0.6, 0.52, 0.45]) {
     const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/webp", quality));
@@ -92,14 +91,6 @@ export async function prepareProductImage(file: File): Promise<{ detail: Blob; c
   if (!file.type.startsWith("image/")) throw new Error("Choose an image file.");
   validateOriginalImageSize(file);
   const image = await loadImage(file);
-  const { naturalWidth: width, naturalHeight: height } = image;
-  if (width < PRODUCT_IMAGE_RULES.detail.width || height < PRODUCT_IMAGE_RULES.detail.height) {
-    throw new Error("Product photos must be at least 1200 × 1500 px.");
-  }
-  if (width * 5 !== height * 4) {
-    throw new Error("Product photos must have a 4:5 portrait shape (for example 1200 × 1500 px). No photo will be cropped.");
-  }
-
   const detail = await makeWebp(image, PRODUCT_IMAGE_RULES.detail.width, PRODUCT_IMAGE_RULES.detail.height, PRODUCT_IMAGE_RULES.detail.maxBytes);
   const card = await makeWebp(image, PRODUCT_IMAGE_RULES.card.width, PRODUCT_IMAGE_RULES.card.height, PRODUCT_IMAGE_RULES.card.maxBytes);
   return { detail, card };
@@ -122,13 +113,6 @@ export async function prepareSlotImage(file: File, slot: ImageSlot): Promise<Blo
   validateOriginalImageSize(file);
   const rules = IMAGE_SLOT_RULES[slot];
   const image = await loadImage(file);
-  const { naturalWidth: width, naturalHeight: height } = image;
-  if (width < rules.width || height < rules.height) {
-    throw new Error(`This image must be at least ${rules.width} × ${rules.height} px.`);
-  }
-  if (width * rules.height !== height * rules.width) {
-    throw new Error(`This image needs a ${rules.width}:${rules.height} shape. No photo will be cropped.`);
-  }
   return makeWebp(image, rules.width, rules.height, rules.maxBytes);
 }
 

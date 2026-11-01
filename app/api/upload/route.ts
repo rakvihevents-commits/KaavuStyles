@@ -46,16 +46,11 @@ async function convertSource(file: File, width: number, height: number, maxBytes
   }
   const sourceWidth = metadata.orientation && metadata.orientation >= 5 && metadata.orientation <= 8 ? metadata.height : metadata.width;
   const sourceHeight = metadata.orientation && metadata.orientation >= 5 && metadata.orientation <= 8 ? metadata.width : metadata.height;
-  if (!sourceWidth || !sourceHeight || sourceWidth < width || sourceHeight < height) {
-    throw new Error(`This image must be at least ${width} × ${height} px.`);
-  }
-  if (sourceWidth * height !== sourceHeight * width) {
-    throw new Error(`This image needs a ${width}:${height} shape. No photo will be cropped.`);
-  }
+  if (!sourceWidth || !sourceHeight) throw new Error("Could not read this image.");
   for (const quality of [82, 75, 68, 60, 52, 45]) {
     const output = await sharp(source, { limitInputPixels: 30_000_000 })
       .rotate()
-      .resize(width, height, { fit: "fill", kernel: "lanczos3" })
+      .resize(width, height, { fit: "inside", withoutEnlargement: true, kernel: "lanczos3" })
       .webp({ quality, effort: 5 })
       .toBuffer();
     if (output.length <= maxBytes) return output;
@@ -136,8 +131,8 @@ export async function POST(req: NextRequest) {
           ["Card", cardBytes, PRODUCT_IMAGE_RULES.card],
         ] as const) {
           const dimensions = webpDimensions(bytes);
-          if (!dimensions || dimensions.width !== rules.width || dimensions.height !== rules.height || bytes.length > rules.maxBytes) {
-            return NextResponse.json({ error: `${name} image must be WebP, ${rules.width} × ${rules.height} px, and at most ${Math.round(rules.maxBytes / 1024)} KB.` }, { status: 400 });
+          if (!dimensions || dimensions.width > rules.width || dimensions.height > rules.height || bytes.length > rules.maxBytes) {
+            return NextResponse.json({ error: `${name} image must be WebP, up to ${rules.width} × ${rules.height} px, and at most ${Math.round(rules.maxBytes / 1024)} KB.` }, { status: 400 });
           }
         }
         const key = `product-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
@@ -178,8 +173,8 @@ export async function POST(req: NextRequest) {
           bytes = Buffer.from(await file.arrayBuffer());
         }
         const dimensions = webpDimensions(bytes);
-        if (!dimensions || dimensions.width !== rules.width || dimensions.height !== rules.height || bytes.length > rules.maxBytes) {
-          return NextResponse.json({ error: `Image must be WebP, ${rules.width} × ${rules.height} px, and at most ${Math.round(rules.maxBytes / 1024)} KB.` }, { status: 400 });
+        if (!dimensions || dimensions.width > rules.width || dimensions.height > rules.height || bytes.length > rules.maxBytes) {
+          return NextResponse.json({ error: `Image must be WebP, up to ${rules.width} × ${rules.height} px, and at most ${Math.round(rules.maxBytes / 1024)} KB.` }, { status: 400 });
         }
         const path = `${rules.folder}/${imageSlot}-${Date.now()}-${Math.random().toString(36).slice(2, 10)}.webp`;
         const { error } = await supabase.storage.from("images").upload(path, bytes, {

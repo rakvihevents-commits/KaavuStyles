@@ -4,7 +4,7 @@ import React, { useRef, useState, useEffect, useId } from "react";
 import Image from "next/image";
 import { Upload, X, Link as LinkIcon, Plus, Loader2 } from "lucide-react";
 import { compressAndOptimizeImage } from "@/lib/utils";
-import { IMAGE_SLOT_RULES, PRODUCT_IMAGE_RULES, WebpEncodingUnavailable, inspectImageUpload, prepareProductImage, prepareSlotImage, uploadOriginalForServerConversion, uploadProductImage, uploadSlotImage, type ImageSlot } from "@/lib/productImageUpload";
+import { WebpEncodingUnavailable, inspectImageUpload, prepareProductImage, prepareSlotImage, uploadOriginalForServerConversion, uploadProductImage, uploadSlotImage, type ImageSlot } from "@/lib/productImageUpload";
 
 import { uploadMultipleImages, uploadSingleImage, isBase64Image } from "@/lib/storageUpload";
 
@@ -67,7 +67,7 @@ export default function ImageUploader({
     const fileList = Array.from(files);
 
     try {
-      // Check size and dimensions together, then reject the whole selection before any upload.
+      // Check file size and readability before uploading the selection.
       const checks = await Promise.all(fileList.map(async (file) => ({
         file,
         issues: await inspectImageUpload(file, isProductUpload ? "product" : imageSlot ?? null),
@@ -173,16 +173,9 @@ export default function ImageUploader({
         <p className="text-xs font-bold uppercase tracking-wider text-crimson">Image upload requirements</p>
         <div className="mt-2 flex flex-wrap gap-2 text-xs text-ink">
           <span className="rounded-md border border-gold/50 bg-white px-3 py-2">Original file: <strong>1 MB max</strong></span>
-          {isProductUpload ? (
-            <span className="rounded-md border border-gold/50 bg-white px-3 py-2">Dimensions: <strong>{PRODUCT_IMAGE_RULES.detail.width} × {PRODUCT_IMAGE_RULES.detail.height} px minimum, 4:5 portrait</strong></span>
-          ) : imageSlot ? (
-            <span className="rounded-md border border-gold/50 bg-white px-3 py-2">Dimensions: <strong>{IMAGE_SLOT_RULES[imageSlot].width} × {IMAGE_SLOT_RULES[imageSlot].height} px minimum, same proportions</strong></span>
-          ) : (
-            <span className="rounded-md border border-gold/50 bg-white px-3 py-2">Dimensions: <strong>Flexible</strong></span>
-          )}
+          <span className="rounded-md border border-gold/50 bg-white px-3 py-2">Dimensions: <strong>Any size or proportions</strong></span>
         </div>
-        {isProductUpload && <p className="mt-2 text-xs leading-relaxed text-ink-muted">Saved as WebP: {PRODUCT_IMAGE_RULES.detail.width} × {PRODUCT_IMAGE_RULES.detail.height} px detail (max 400 KB) and {PRODUCT_IMAGE_RULES.card.width} × {PRODUCT_IMAGE_RULES.card.height} px card (max 100 KB). Images with the wrong shape or insufficient resolution are rejected.</p>}
-        {imageSlot && <p className="mt-2 text-xs leading-relaxed text-ink-muted">Saved as {IMAGE_SLOT_RULES[imageSlot].width} × {IMAGE_SLOT_RULES[imageSlot].height} px WebP, max {Math.round(IMAGE_SLOT_RULES[imageSlot].maxBytes / 1024)} KB. Images with the wrong shape or insufficient resolution are rejected.</p>}
+        <p className="mt-2 text-xs leading-relaxed text-ink-muted">Choose an image under 1 MB. Photos are optimized automatically while keeping their proportions, without cropping or stretching.</p>
       </div>
       <input ref={fileInputRef} type="file" accept="image/*" multiple={!single} onChange={handleFileSelect} disabled={isCompressing} className="hidden" aria-label={label} />
       {isUrlMode && !isProductUpload && !imageSlot && <div className="flex flex-col sm:flex-row gap-2">
