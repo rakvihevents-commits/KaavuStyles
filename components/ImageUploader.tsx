@@ -4,7 +4,7 @@ import React, { useRef, useState, useId } from "react";
 import Image from "next/image";
 import { Upload, X, Link as LinkIcon, Plus, Loader2 } from "lucide-react";
 import { compressAndOptimizeImage } from "@/lib/utils";
-import { WebpEncodingUnavailable, inspectImageUpload, prepareProductImage, prepareSlotImage, uploadOriginalForServerConversion, uploadProductImage, uploadSlotImage, type ImageSlot } from "@/lib/productImageUpload";
+import { imageUploadLimit, WebpEncodingUnavailable, inspectImageUpload, prepareProductImage, prepareSlotImage, uploadOriginalForServerConversion, uploadProductImage, uploadSlotImage, type ImageSlot } from "@/lib/productImageUpload";
 
 import { uploadMultipleImages, uploadSingleImage, isBase64Image } from "@/lib/storageUpload";
 
@@ -12,6 +12,7 @@ interface ImageUploaderProps {
   images: string[];
   onChange: (images: string[]) => void;
   single?: boolean;
+  hidePreview?: boolean;
   label?: string;
   noOptimize?: boolean;
   maxDimension?: number;
@@ -25,6 +26,7 @@ export default function ImageUploader({
   images,
   onChange,
   single = false,
+  hidePreview = false,
   label = "Upload Product Images",
   noOptimize = false,
   maxDimension = 1600,
@@ -41,6 +43,7 @@ export default function ImageUploader({
   const [isCompressing, setIsCompressing] = useState(false);
   const [dimensions, setDimensions] = useState<Record<string, { width: number; height: number }>>({});
   const isProductUpload = folder === "products";
+  const maxUploadMB = imageUploadLimit(isProductUpload ? "product" : imageSlot ?? null) / 1_000_000;
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -156,10 +159,10 @@ export default function ImageUploader({
       <div className="rounded-xl border-2 border-gold bg-ivory-50 p-3 sm:p-4 shadow-sm" aria-label="Image upload requirements">
         <p className="text-xs font-bold uppercase tracking-wider text-crimson">Image upload requirements</p>
         <div className="mt-2 flex flex-wrap gap-2 text-xs text-ink">
-          <span className="rounded-md border border-gold/50 bg-white px-3 py-2">Original file: <strong>{isProductUpload ? "5 MB" : "1 MB"} max</strong></span>
+          <span className="rounded-md border border-gold/50 bg-white px-3 py-2">Original file: <strong>{maxUploadMB} MB max</strong></span>
           <span className="rounded-md border border-gold/50 bg-white px-3 py-2">Dimensions: <strong>Any size or proportions</strong></span>
         </div>
-        <p className="mt-2 text-xs leading-relaxed text-ink-muted">Choose an image up to {isProductUpload ? "5 MB" : "1 MB"}. Photos are optimized automatically while keeping their proportions, without cropping or stretching.</p>
+        <p className="mt-2 text-xs leading-relaxed text-ink-muted">Choose an image up to {maxUploadMB} MB. Photos are optimized automatically while keeping their proportions, without cropping or stretching.</p>
       </div>
       <input ref={fileInputRef} type="file" accept="image/*" multiple={!single} onChange={handleFileSelect} disabled={isCompressing} className="hidden" aria-label={label} />
       {isUrlMode && !isProductUpload && !imageSlot && <div className="flex flex-col sm:flex-row gap-2">
@@ -168,7 +171,7 @@ export default function ImageUploader({
       </div>}
       <div className="rounded-xl border border-ivory-300 bg-ivory-50 p-3 sm:p-4">
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-          {images.map((src, index) => <div key={`${src}-${index}`} className="relative aspect-square min-w-0 rounded-lg overflow-hidden border border-ivory-300 bg-white group">
+          {!hidePreview && images.map((src, index) => <div key={`${src}-${index}`} className="relative aspect-square min-w-0 rounded-lg overflow-hidden border border-ivory-300 bg-white group">
             <Image src={src} onLoad={(event) => {
               const { naturalWidth: width, naturalHeight: height } = event.currentTarget;
               setDimensions((previous) => previous[src]?.width === width && previous[src]?.height === height
@@ -178,13 +181,13 @@ export default function ImageUploader({
             {index === 0 && <span className="absolute left-2 top-2 bg-ink/80 px-2 py-1 rounded text-[9px] uppercase tracking-wider text-ivory">Cover</span>}
             {dimensions[src] && <span className="absolute bottom-0 inset-x-0 bg-ink/70 text-white text-[9px] text-center py-1">{dimensions[src].width} × {dimensions[src].height} px</span>}
           </div>)}
-          <button type="button" disabled={isCompressing} onClick={() => fileInputRef.current?.click()} className={`rounded-lg border-2 border-dashed border-gold/40 bg-white/60 hover:bg-gold/5 hover:border-gold transition-colors flex flex-col items-center justify-center gap-2 text-center p-4 disabled:cursor-wait ${images.length ? "aspect-square" : "col-span-2 sm:col-span-3 lg:col-span-5 min-h-[180px]"}`}>
+          <button type="button" disabled={isCompressing} onClick={() => fileInputRef.current?.click()} className={`rounded-lg border-2 border-dashed border-gold/40 bg-white/60 hover:bg-gold/5 hover:border-gold transition-colors flex flex-col items-center justify-center gap-2 text-center p-4 disabled:cursor-wait ${images.length && !hidePreview ? "aspect-square" : "col-span-2 sm:col-span-3 lg:col-span-5 min-h-[180px]"}`}>
             {isCompressing ? <Loader2 className="w-7 h-7 text-gold animate-spin" /> : images.length ? <Plus className="w-8 h-8 text-gold" /> : <Upload className="w-7 h-7 text-gold" />}
             <span className="text-xs font-semibold text-ink">{isCompressing ? "Uploading photos…" : images.length ? single ? "Replace photo" : "Add photo" : "Choose photos from device"}</span>
             {!images.length && !isCompressing && <span className="max-w-xs text-xs text-ink-muted">{noOptimize ? "Choose a photo to preview it here." : single ? "Your photo is optimized automatically." : "Photos are optimized automatically. You can select several at once."}</span>}
           </button>
         </div>
-        {images.length > 0 && <p className="mt-3 text-[11px] text-ink-muted">{images.length} photo{images.length === 1 ? "" : "s"}{single ? " · Use Replace photo to choose another." : " · Use + to upload more photos."}</p>}
+        {!hidePreview && images.length > 0 && <p className="mt-3 text-[11px] text-ink-muted">{images.length} photo{images.length === 1 ? "" : "s"}{single ? " · Use Replace photo to choose another." : " · Use + to upload more photos."}</p>}
       </div>
       {uploadError && <p role="alert" className="whitespace-pre-line rounded-lg border border-crimson/40 bg-crimson/5 p-3 text-sm font-medium text-crimson">{uploadError}</p>}
     </div>

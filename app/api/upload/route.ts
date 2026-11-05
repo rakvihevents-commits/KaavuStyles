@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import sharp from "sharp";
-import { IMAGE_SLOT_RULES, MAX_ORIGINAL_IMAGE_BYTES, MAX_PRODUCT_IMAGE_BYTES, PRODUCT_IMAGE_RULES, type ImageSlot } from "@/lib/productImageUpload";
+import { imageUploadLimit, IMAGE_SLOT_RULES, MAX_ORIGINAL_IMAGE_BYTES, MAX_PRODUCT_IMAGE_BYTES, PRODUCT_IMAGE_RULES, type ImageSlot } from "@/lib/productImageUpload";
 import { requireAdmin } from "@/lib/admin-session";
 
 export const dynamic = "force-dynamic";
@@ -163,7 +163,7 @@ export async function POST(req: NextRequest) {
           const source = formData.get("sourceFile");
           if (!(source instanceof File)) return NextResponse.json({ error: "An image file is required." }, { status: 400 });
           try {
-            bytes = await convertSource(source, rules.width, rules.height, rules.maxBytes);
+            bytes = await convertSource(source, rules.width, rules.height, rules.maxBytes, imageUploadLimit(imageSlot as ImageSlot));
           } catch (error) {
             return NextResponse.json({ error: error instanceof Error ? error.message : "Could not process this image." }, { status: 400 });
           }

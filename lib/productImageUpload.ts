@@ -3,6 +3,10 @@ import { productCardUrl } from "@/lib/productImages";
 export const MAX_ORIGINAL_IMAGE_BYTES = 1_000_000;
 export const MAX_PRODUCT_IMAGE_BYTES = 5_000_000;
 
+export function imageUploadLimit(slot: ImageSlot | "product" | null): number {
+  return slot === "product" || slot === "category" ? MAX_PRODUCT_IMAGE_BYTES : MAX_ORIGINAL_IMAGE_BYTES;
+}
+
 function imageSizeIssue(file: File, maxBytes = MAX_ORIGINAL_IMAGE_BYTES): string | null {
   return file.size > maxBytes
     ? `Size: ${(file.size / 1_000_000).toFixed(2)} MB exceeds the ${maxBytes / 1_000_000} MB maximum.`
@@ -47,7 +51,7 @@ function loadImage(file: File): Promise<HTMLImageElement> {
 
 export async function inspectImageUpload(file: File, slot: ImageSlot | "product" | null): Promise<string[]> {
   const issues: string[] = [];
-  const sizeIssue = imageSizeIssue(file, slot === "product" ? MAX_PRODUCT_IMAGE_BYTES : MAX_ORIGINAL_IMAGE_BYTES);
+  const sizeIssue = imageSizeIssue(file, imageUploadLimit(slot));
   if (sizeIssue) issues.push(sizeIssue);
   if (!file.type.startsWith("image/")) {
     issues.push("Format: Choose an image file.");
@@ -111,7 +115,7 @@ export async function uploadProductImage({ detail, card }: { detail: Blob; card:
 
 export async function prepareSlotImage(file: File, slot: ImageSlot): Promise<Blob> {
   if (!file.type.startsWith("image/")) throw new Error("Choose an image file.");
-  validateOriginalImageSize(file);
+  validateOriginalImageSize(file, imageUploadLimit(slot));
   const rules = IMAGE_SLOT_RULES[slot];
   const image = await loadImage(file);
   return makeWebp(image, rules.width, rules.height, rules.maxBytes);
@@ -128,14 +132,14 @@ export async function uploadSlotImage(output: Blob, slot: ImageSlot): Promise<st
 }
 
 export async function uploadOriginalForServerConversion(file: File, slot: ImageSlot | "product"): Promise<string> {
-  validateOriginalImageSize(file, slot === "product" ? MAX_PRODUCT_IMAGE_BYTES : MAX_ORIGINAL_IMAGE_BYTES);
+  validateOriginalImageSize(file, imageUploadLimit(slot));
   const body = new FormData();
   // Keep fallback requests small enough for the hosting request body limit.
-  if (slot === "product") {
+  if (slot === "product" || slot === "category") {
     const image = await loadImage(file);
-    const rules = PRODUCT_IMAGE_RULES.detail;
+    const rules = slot === "product" ? PRODUCT_IMAGE_RULES.detail : IMAGE_SLOT_RULES[slot];
     const jpeg = await makeWebp(image, rules.width, rules.height, MAX_ORIGINAL_IMAGE_BYTES, "image/jpeg");
-    body.append("sourceFile", jpeg, "product.jpg");
+    body.append("sourceFile", jpeg, `${slot}.jpg`);
   } else {
     body.append("sourceFile", file);
   }

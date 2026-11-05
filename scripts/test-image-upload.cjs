@@ -57,3 +57,13 @@ test('product accepts 5 MB while other slots keep their 1 MB limit', async () =>
   assert.match((await auth.inspectImageUpload(large, 'instagram'))[0], /1 MB maximum/);
   await assert.rejects(auth.prepareSlotImage(large, 'instagram'), /1 MB maximum/);
 });
+
+test('category accepts 5 MB and rejects files over the limit', async () => {
+  const auth = setup(1086, 1448);
+  const large = { ...file, size: 5_000_000 };
+  assert.equal((await auth.inspectImageUpload(large, 'category')).length, 0);
+  await auth.prepareSlotImage(large, 'category');
+  const oversized = { ...file, size: 5_000_001 };
+  assert.match((await auth.inspectImageUpload(oversized, 'category'))[0], /5 MB maximum/);
+  await assert.rejects(auth.prepareSlotImage(oversized, 'category'), /5 MB maximum/);
+});

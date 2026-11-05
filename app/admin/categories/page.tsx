@@ -144,6 +144,7 @@ export default function AdminCategoriesPage() {
                 label="Category Cover Image File"
                 folder="categories"
                 imageSlot="category"
+                hidePreview
               />
 
               <button
